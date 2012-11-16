@@ -1,10 +1,10 @@
+#include "Screen.hpp"
 #include <iostream>
 #include <RendererModules/OpenGL/CEGUIOpenGLRenderer.h>
-#include "Screen.hpp"
 
 std::string CEGUIInstallBasePath;
 
-Screen::Screen (const unsigned int & width, const unsigned int & height) :
+Screen::Screen( const unsigned int & width, const unsigned int & height ) :
   _w(width), _h(height), _alive(true) {
   CEGUIInstallBasePath = getPath() + "/";
   _surface = initSDL();
@@ -101,7 +101,7 @@ void Screen::injectInput() {
   }
 }
 
-void Screen::injectTimePulse(double & ltp) {
+void Screen::injectTimePulse( double & ltp ) {
   double current = 0.001 * SDL_GetTicks();
   CEGUI::System::getSingleton().injectTimePulse(static_cast<float>(current -
         ltp));
@@ -151,21 +151,21 @@ void Screen::setCEGUIPaths() {
  
 void Screen::createGUI() {
   // Hier komt de eigen UI in
-  std::cout << " - creating the GUI" << std::endl;
-  CEGUI::DefaultWindow & rootWin = *static_cast<CEGUI::DefaultWindow*>(
-      _winManager->createWindow("DefaultWindow", "Root"));
-  CEGUI::System::getSingleton().setGUISheet(&rootWin);
-  CEGUI::FrameWindow & myWin = *static_cast<CEGUI::FrameWindow*>(
-      _winManager->createWindow("TaharezLook/FrameWindow", "Demo Window"));
-  rootWin.addChildWindow(&myWin);
-  myWin.setPosition(CEGUI::UVector2( cegui_reldim(0.25f), cegui_reldim(0.25f)));
-  myWin.setSize(CEGUI::UVector2(cegui_reldim(0.5f), cegui_reldim(0.5f)));
-  myWin.setMaxSize(CEGUI::UVector2(cegui_reldim(1.0f), cegui_reldim(1.0f)));
-  myWin.setMinSize(CEGUI::UVector2(cegui_reldim(0.1f), cegui_reldim(0.1f)));
-  myWin.setText("Hello World! This is a minimal SDL+OpenGL+CEGUI test.");
+  // std::cout << " - creating the GUI" << std::endl;
+  // CEGUI::DefaultWindow & rootWin = *static_cast<CEGUI::DefaultWindow*>(
+  //     _winManager->createWindow("DefaultWindow", "Root"));
+  // CEGUI::System::getSingleton().setGUISheet(&rootWin);
+  // CEGUI::FrameWindow & myWin = *static_cast<CEGUI::FrameWindow*>(
+  //     _winManager->createWindow("TaharezLook/FrameWindow", "Demo Window"));
+  // rootWin.addChildWindow(&myWin);
+  // myWin.setPosition(CEGUI::UVector2( cegui_reldim(0.25f), cegui_reldim(0.25f)));
+  // myWin.setSize(CEGUI::UVector2(cegui_reldim(0.5f), cegui_reldim(0.5f)));
+  // myWin.setMaxSize(CEGUI::UVector2(cegui_reldim(1.0f), cegui_reldim(1.0f)));
+  // myWin.setMinSize(CEGUI::UVector2(cegui_reldim(0.1f), cegui_reldim(0.1f)));
+  // myWin.setText("Hello World! This is a minimal SDL+OpenGL+CEGUI test.");
 }
 
-void Screen::handleMouseDown (Uint8 button) {
+void Screen::handleMouseDown( Uint8 button ) {
   switch ( button ) {
     case SDL_BUTTON_LEFT:
       CEGUI::System::getSingleton().injectMouseButtonDown(CEGUI::LeftButton);

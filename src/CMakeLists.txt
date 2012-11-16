@@ -1,5 +1,6 @@
 set(revolution_SRCS
     Screen.cpp
+    Shader.cpp
     World.cpp
     Main.cpp)
 
