@@ -5,15 +5,18 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "World.hpp"
 
-World::World() {
+World::World(const unsigned int & width, const unsigned int & height) {
   initVertices();
   initShaderProgram();
 
-  _proj = glm::perspective(45.0f, 4.0f/3.0f, 1.0f, 100.0f);
-  _view = glm::lookAt(
-      glm::vec3(4, 3, 3), glm::vec3(0, 0, 0), glm::vec3(0,1, 0));
+  _cam = new Camera(width, height);
+
   model = glm::mat4(1.0f);
-  mvp = model * _proj * _view;
+}
+
+World::~World() {
+  delete _cam;
+  delete _shader;
 }
 
 void World::initShaderProgram() {
@@ -28,6 +31,7 @@ void World::initShaderProgram() {
 
 void World::draw() {
   _shader->bind();
+  mvp = _cam->transform(model);
   _shader->setUniform("vMVP", mvp);
 
   glBindVertexArray(_vao);

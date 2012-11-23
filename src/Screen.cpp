@@ -9,6 +9,7 @@ Screen::Screen( const unsigned int & width, const unsigned int & height ) :
   CEGUIInstallBasePath = getPath() + "/";
   _surface = initSDL();
   _winManager = initCEGUI();
+  _lookAround = false;
   createGUI();
   lastTimePulse = 0.001 * static_cast<double>(SDL_GetTicks());
 }
@@ -43,7 +44,6 @@ SDL_Surface *Screen::initSDL() {
     SDL_Quit();
     exit(0);
   }
-  SDL_ShowCursor(SDL_DISABLE);
   SDL_EnableUNICODE(1);
   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 
@@ -79,9 +79,14 @@ void Screen::injectInput() {
         // We inject the mouse position directly here:
         CEGUI::System::getSingleton().injectMousePosition(static_cast<float>(
               e.motion.x), static_cast<float>(e.motion.y));
+        if (_lookAround) {
+          _world->getCamera().look(_mouseRef[0], _mouseRef[1], e.motion.x,
+              e.motion.y);
+          SDL_WarpMouse(_mouseRef[0], _mouseRef[1]);
+        }
         break;
       case SDL_MOUSEBUTTONDOWN:
-        handleMouseDown(e.button.button);
+        handleMouseDown(e.button.button, e.button.x, e.button.y);
         break;
       case SDL_MOUSEBUTTONUP:
         handleMouseUp(e.button.button);
@@ -96,6 +101,7 @@ void Screen::injectInput() {
          */
         if ((e.key.keysym.unicode & 0xFF80) == 0) {
           CEGUI::System::getSingleton().injectChar(e.key.keysym.unicode & 0x7F);
+          executeInput(e.key.keysym.unicode & 0x7F);
         }
         break;
       case SDL_KEYUP:
@@ -163,7 +169,7 @@ void Screen::setCEGUIPaths() {
  
 void Screen::createGUI() {
   std::cout << "Creating the GUI..." << std::endl;
-  _world = new World();
+  _world = new World(_w, _h);
   // Hier komt de eigen UI in
   // std::cout << " - creating the GUI" << std::endl;
   // CEGUI::DefaultWindow & rootWin = *static_cast<CEGUI::DefaultWindow*>(
@@ -179,7 +185,7 @@ void Screen::createGUI() {
   // myWin.setText("Hello World! This is a minimal SDL+OpenGL+CEGUI test.");
 }
 
-void Screen::handleMouseDown( Uint8 button ) {
+void Screen::handleMouseDown( Uint8 button, const int & x, const int & y ) {
   switch ( button ) {
     case SDL_BUTTON_LEFT:
       CEGUI::System::getSingleton().injectMouseButtonDown(CEGUI::LeftButton);
@@ -189,6 +195,8 @@ void Screen::handleMouseDown( Uint8 button ) {
       break;
     case SDL_BUTTON_RIGHT:
       CEGUI::System::getSingleton().injectMouseButtonDown(CEGUI::RightButton);
+      _lookAround = true;
+      _mouseRef[0] = x; _mouseRef[1] = y;
       break;
     case SDL_BUTTON_WHEELDOWN:
       CEGUI::System::getSingleton().injectMouseWheelChange(-1);
@@ -213,6 +221,7 @@ void Screen::handleMouseUp( Uint8 button ) {
       break;
     case SDL_BUTTON_RIGHT:
       CEGUI::System::getSingleton().injectMouseButtonUp(CEGUI::RightButton);
+      _lookAround = false;
       break;
     case SDL_BUTTON_WHEELDOWN:
       break;
@@ -230,4 +239,21 @@ std::string Screen::getPath() {
   int max = 256;
   char temp[max];
   return (getcwd(temp, max) ? std::string(temp) : std::string(""));
+}
+
+void Screen::executeInput( const int & key ) {
+  switch (char(key)) {
+    case 'w':
+      _world->getCamera().move(0.0f, -1.0f);
+      break;
+    case 's':
+      _world->getCamera().move(0.0f, 1.0f);
+      break;
+    case 'a':
+      _world->getCamera().move(-1.0f, 0.0f);
+      break;
+    case 'd':
+      _world->getCamera().move(1.0f, 0.0f);
+      break;
+  }
 }

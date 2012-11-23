@@ -23,6 +23,8 @@ class Screen {
     SDL_Surface *_surface;
     CEGUI::WindowManager *_winManager;
     World *_world;
+    float _mouseRef[2];
+    bool _lookAround;
 
     SDL_Surface *initSDL();
     CEGUI::WindowManager *initCEGUI();
@@ -30,10 +32,12 @@ class Screen {
     void createGUI();
     void injectInput();
     void injectTimePulse( double & ltp );
-    void handleMouseDown( Uint8 button );
+    void handleMouseDown( Uint8 button, const int & x, const int & y );
     void handleMouseUp( Uint8 button );
 
     static std::string getPath();
+
+    void executeInput( const int & key );
 };
 
 inline bool Screen::isOpened() {

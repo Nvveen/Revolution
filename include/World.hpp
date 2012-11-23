@@ -4,27 +4,34 @@
 #include <vector>
 #include <GL/gl.h>
 #include "Shader.hpp"
+#include "Camera.hpp"
 
 class World {
   public:
-    World ();
-    virtual ~World() {}
+    World () {}
+    World (const unsigned int & width, const unsigned int & height);
+    virtual ~World();
 
     void draw();
+    Camera & getCamera();
   protected:
   private:
     void initVertices();
     void initShaderProgram();
 
     Shader *_shader;
+    Camera *_cam;
     GLuint _vbo;
     GLuint _vao;
 
-    glm::mat4 _proj, _view;
 
     std::vector<GLfloat> data;
     glm::mat4 model;
     glm::mat4 mvp;
 };
+
+inline Camera & World::getCamera () {
+  return *(this->_cam);
+}
 
 #endif
