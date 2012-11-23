@@ -5,7 +5,7 @@ if [[ "$1" == "clean" ]]; then
   rm -rf .build/
 fi
 
-if [[ ! -d "build/" ]]; then
+if [[ ! -d ".build/" ]]; then
   mkdir -v .build
 fi
 

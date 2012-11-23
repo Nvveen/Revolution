@@ -10,7 +10,7 @@ class Screen {
   public:
     Screen () {}
     Screen( const unsigned int & width, const unsigned int & height );
-    virtual ~Screen () {}
+    virtual ~Screen ();
 
     void render();
     void clear();
@@ -22,7 +22,7 @@ class Screen {
     double lastTimePulse;
     SDL_Surface *_surface;
     CEGUI::WindowManager *_winManager;
-    World *world;
+    World *_world;
 
     SDL_Surface *initSDL();
     CEGUI::WindowManager *initCEGUI();

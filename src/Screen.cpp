@@ -13,6 +13,13 @@ Screen::Screen( const unsigned int & width, const unsigned int & height ) :
   lastTimePulse = 0.001 * static_cast<double>(SDL_GetTicks());
 }
 
+Screen::~Screen() {
+  std::cout << "Cleaning up the screen..." << std::endl;
+  delete _world;
+  delete _winManager;
+  SDL_FreeSurface(_surface);
+}
+
 CEGUI::WindowManager *Screen::initCEGUI() {
   std::cout << " - initializing CEGUI" << std::endl;
   CEGUI::OpenGLRenderer::bootstrapSystem();
@@ -40,11 +47,14 @@ SDL_Surface *Screen::initSDL() {
   SDL_EnableUNICODE(1);
   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_CULL_FACE);
+
   return screen;
 }
 
 void Screen::clear() {
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
  
 void Screen::render() {
@@ -52,6 +62,8 @@ void Screen::render() {
   injectTimePulse(lastTimePulse);
   // Renders the GUI:
   CEGUI::System::getSingleton().renderGUI();
+  // Render the world
+  _world->draw();
   // Updates the screen:
   SDL_GL_SwapBuffers();
 }
@@ -150,6 +162,8 @@ void Screen::setCEGUIPaths() {
 }
  
 void Screen::createGUI() {
+  std::cout << "Creating the GUI..." << std::endl;
+  _world = new World();
   // Hier komt de eigen UI in
   // std::cout << " - creating the GUI" << std::endl;
   // CEGUI::DefaultWindow & rootWin = *static_cast<CEGUI::DefaultWindow*>(

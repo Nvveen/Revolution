@@ -18,6 +18,13 @@ class World {
 
     Shader *_shader;
     GLuint _vbo;
+    GLuint _vao;
+
+    glm::mat4 _proj, _view;
+
+    std::vector<GLfloat> data;
+    glm::mat4 model;
+    glm::mat4 mvp;
 };
 
 #endif
