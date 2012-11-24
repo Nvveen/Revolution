@@ -37,7 +37,7 @@ class Screen {
 
     static std::string getPath();
 
-    void executeInput( const int & key );
+    void executeInput( const SDLKey & key );
 };
 
 inline bool Screen::isOpened() {

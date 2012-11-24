@@ -1,5 +1,6 @@
 set(revolution_SRCS
     Camera.cpp
+    Drawable.cpp
     Screen.cpp
     Shader.cpp
     World.cpp
