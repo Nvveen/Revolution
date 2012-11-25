@@ -13,3 +13,99 @@
 // You should have received a copy of the GNU General Public License along with 
 // Revolution. If not, see <http://www.gnu.org/licenses/>.
 #include "Drawable.hpp"
+
+Drawable::Drawable ()
+{
+}
+
+Drawable::Drawable ( Shader * const shader, glm::vec4 const & primary ) : 
+  _shader(shader), _primaryColor(primary), _model(glm::mat4(1.0))
+{
+  this->init();
+}
+
+Drawable::~Drawable ()
+{
+}
+
+void Drawable::init ()
+{
+  _data = std::vector<GLfloat> {
+    // Front
+    -1.0f, -1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+     1.0f,  1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+    // Right
+     1.0f, -1.0f, -1.0f,
+     1.0f,  1.0f, -1.0f,
+     1.0f, -1.0f,  1.0f,
+     1.0f,  1.0f, -1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f, -1.0f,  1.0f,
+    // Back
+     1.0f, -1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+    -1.0f, -1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+    -1.0f,  1.0f,  1.0f,
+    -1.0f, -1.0f,  1.0f,
+    // Left
+    -1.0f, -1.0f,  1.0f,
+    -1.0f,  1.0f,  1.0f,
+    -1.0f, -1.0f, -1.0f,
+    -1.0f,  1.0f,  1.0f,
+    -1.0f,  1.0f, -1.0f,
+    -1.0f, -1.0f, -1.0f,
+    // Top
+    -1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f, -1.0f,
+    // Bottom
+    -1.0f, -1.0f,  1.0f,
+    -1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+    -1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f,  1.0f,
+  };
+
+  glGenVertexArrays(1, &_vao);
+  glBindVertexArray(_vao);
+  glEnableVertexAttribArray(0);
+
+  glGenBuffers(1, &_vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, _vbo);
+
+  glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*_data.size(), &_data[0],
+      GL_DYNAMIC_DRAW);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*3,
+      (void *)0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glDisableVertexAttribArray(0);
+  glBindVertexArray(0);
+}
+
+void Drawable::draw ( Camera * const cam )
+{
+  _shader->bind();
+  glm::mat4 mvp = cam->transform(_model);
+  _shader->setUniform("vMVP", mvp);
+  _shader->setUniform("objectColor", _primaryColor);
+
+  glBindVertexArray(_vao);
+  glEnableVertexAttribArray(0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, _vbo);
+  glDrawArrays(GL_TRIANGLES, 0, _data.size()/3);
+
+  glDisableVertexAttribArray(0);
+  glBindVertexArray(0);
+  _shader->unbind();
+}

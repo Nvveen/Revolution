@@ -16,9 +16,10 @@ Revolution. If not, see <http://www.gnu.org/licenses/>.
 */
 #version 330
 
-in vec4 fragmentColor;
 out vec4 color;
 
+uniform vec4 objectColor;
+
 void main() {
-  color = fragmentColor;
+  color = objectColor;
 }

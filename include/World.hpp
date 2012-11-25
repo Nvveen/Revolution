@@ -19,6 +19,7 @@
 #include <GL/gl.h>
 #include "Shader.hpp"
 #include "Camera.hpp"
+#include "Drawable.hpp"
 
 class World {
   public:
@@ -26,25 +27,19 @@ class World {
     World (const unsigned int & width, const unsigned int & height);
     virtual ~World();
 
-    void draw();
+    void draw ();
     Camera & getCamera();
   protected:
   private:
-    void initVertices();
-    void initShaderProgram();
-
     Shader *_shader;
     Camera *_cam;
-    GLuint _vbo;
-    GLuint _vao;
-
-
-    std::vector<GLfloat> data;
-    glm::mat4 model;
-    glm::mat4 mvp;
+    std::vector<Drawable *> _drawables;
+    
+    void init ();
 };
 
-inline Camera & World::getCamera () {
+inline Camera & World::getCamera ()
+{
   return *(this->_cam);
 }
 

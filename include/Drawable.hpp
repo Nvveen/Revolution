@@ -15,4 +15,27 @@
 #ifndef DRAWABLE_HPP
 #define DRAWABLE_HPP
 
+#include <vector>
+#include "Shader.hpp"
+#include "Camera.hpp"
+
+class Drawable {
+  public:
+    Drawable ();
+    Drawable ( Shader * const shader, glm::vec4 const & primary );
+    virtual ~Drawable ();
+
+    void draw ( Camera * const cam );
+  protected:
+  private:
+    Shader *_shader;
+    std::vector<GLfloat> _data;
+    glm::vec4 _primaryColor;
+
+    GLuint _vao, _vbo;
+    glm::mat4 _model;
+
+    void init ();
+};
+
 #endif
