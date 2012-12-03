@@ -35,49 +35,52 @@ var (
   numCountries = 0
 )
 
-type vertex struct {
-  x, y float64
-}
-
-type country struct {
-  name string
-  polygons int
-}
-
-type BoundaryIs struct {
-  LinearRing struct {
-    Coordinates string `xml:"coordinates"`
+type (
+  vertex struct {
+    x, y float64
   }
-}
 
-type Polygon struct {
-  OuterBoundaryIs BoundaryIs `xml:"outerBoundaryIs"`
-  InnerBoundaryIs BoundaryIs `xml:"innerBoundaryIs"`
-}
+  country struct {
+    name string
+    polygons int
+  }
 
-type Place struct {
-  Description string `xml:"description"`
-  Name string `xml:"name"`
-  Style struct {
-    PolyStyle struct {
-      Color string `xml:"color"`
-      ColorMode string `xml:"colorMode"`
+  BoundaryIs struct {
+    LinearRing struct {
+      Coordinates string `xml:"coordinates"`
     }
   }
-  MultiGeometry []Polygon `xml:"MultiGeometry>Polygon"`
-  Polygon Polygon `xml:"Polygon"`
-}
 
-type KML struct {
-  XMLName xml.Name `xml:"kml"`
-  Document struct {
-    Name string `xml:"name"`
-    Folders []struct {
-      Name string `xml:"name"`
-      Placemarks []Place `xml:"Placemark"`
-    } `xml:"Folder"`
+  Polygon struct {
+    OuterBoundaryIs BoundaryIs `xml:"outerBoundaryIs"`
+    InnerBoundaryIs BoundaryIs `xml:"innerBoundaryIs"`
   }
-}
+
+  Place struct {
+    Description string `xml:"description"`
+    Name string `xml:"name"`
+    Style struct {
+      PolyStyle struct {
+        Color string `xml:"color"`
+        ColorMode string `xml:"colorMode"`
+      }
+    }
+    MultiGeometry []Polygon `xml:"MultiGeometry>Polygon"`
+    Polygon Polygon `xml:"Polygon"`
+  }
+
+  KML struct {
+    XMLName xml.Name `xml:"kml"`
+    Document struct {
+      Name string `xml:"name"`
+      Folders []struct {
+        Name string `xml:"name"`
+        Placemarks []Place `xml:"Placemark"`
+      } `xml:"Folder"`
+    }
+  }
+)
+
 
 func OpenZip (fn string) ([]byte, error) {
   r, err := zip.OpenReader(fn)
@@ -295,7 +298,7 @@ func Compile(countries []country) {
   }
 }
 
-func ConvertBDM (kml *KML) {
+func Convert (kml *KML) {
   os.RemoveAll("countries/")
   os.Mkdir("countries/", 0755)
   for i, _:= range kml.Document.Folders {
@@ -355,5 +358,5 @@ func main () {
     log.Fatal(err)
   }
 
-  ConvertBDM(&kml)
+  Convert(&kml)
 }
