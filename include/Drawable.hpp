@@ -25,14 +25,18 @@ class Drawable {
     Drawable ( Shader * const shader, glm::vec4 const & primary );
     virtual ~Drawable ();
 
+    void addData ( std::vector<glm::vec3> const & vertices,
+                   std::vector<glm::ivec3> const & indices );
+
     void draw ( Camera * const cam );
   protected:
   private:
     Shader *_shader;
-    std::vector<GLfloat> _data;
+    std::vector<glm::vec3> _verts;
+    std::vector<glm::ivec3> _ind;
     glm::vec4 _primaryColor;
 
-    GLuint _vao, _vbo;
+    GLuint _vao, _vbo, _ibo;
     glm::mat4 _model;
 
     void init ();

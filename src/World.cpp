@@ -44,7 +44,44 @@ void World::init ()
   _shader->setUniformLocation("vMVP");
   _shader->setUniformLocation("objectColor");
 
-  _drawables.push_back(new Drawable(_shader, glm::vec4(1, 0, 0, 1)));
+  std::cout << "Loading countries..." << std::endl;
+
+  std::ifstream file;
+  file.open("src/go/out.dat", std::ios::binary);
+  unsigned short numCountries = 0;
+  file.read(reinterpret_cast<char *>(&numCountries), sizeof(unsigned short));
+  for (unsigned short i = 0; i < numCountries; i++) {
+    Drawable *d = new Drawable(_shader, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+    unsigned short nameLength, numPolygons;
+    std::vector<glm::vec3> verts;
+    std::vector<glm::ivec3> ind;
+    file.read(reinterpret_cast<char *>(&nameLength), sizeof(unsigned short));
+    char *name = new char[nameLength+1];
+    file.read(reinterpret_cast<char *>(&name[0]), nameLength);
+    name[nameLength] = '\0';
+    file.read(reinterpret_cast<char *>(&numPolygons), sizeof(unsigned short));
+    for (unsigned short j = 0; j < numPolygons; j++) {
+      unsigned int numVerts, numEdges;
+      file.read(reinterpret_cast<char *>(&numVerts), sizeof(unsigned int));
+      for (unsigned int k = 0; k < numVerts; k++) {
+        long double x, y;
+        file.read(reinterpret_cast<char *>(&x), sizeof(double));
+        file.read(reinterpret_cast<char *>(&y), sizeof(double));
+        verts.push_back(glm::vec3(x, y, 0));
+      }
+      file.read(reinterpret_cast<char *>(&numEdges), sizeof(unsigned int));
+      for (unsigned int k = 0; k < numEdges; k++) {
+        unsigned int x, y, z;
+        file.read(reinterpret_cast<char *>(&x), sizeof(unsigned int));
+        file.read(reinterpret_cast<char *>(&y), sizeof(unsigned int));
+        file.read(reinterpret_cast<char *>(&z), sizeof(unsigned int));
+        ind.push_back(glm::ivec3(x, y, z));
+      }
+    }
+    d->addData(verts, ind);
+    _drawables.push_back(d);
+  }
+  std::cout << "Done loading countries..." << std::endl;
 }
 
 void World::draw()

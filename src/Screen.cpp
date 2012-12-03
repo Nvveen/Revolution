@@ -15,6 +15,7 @@
 #include "Screen.hpp"
 #include <iostream>
 #include <RendererModules/OpenGL/CEGUIOpenGLRenderer.h>
+#include <unistd.h>
 
 std::string CEGUIInstallBasePath;
 
