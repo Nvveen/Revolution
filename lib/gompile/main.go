@@ -12,6 +12,9 @@
 // 
 // You should have received a copy of the GNU General Public License along with 
 // Revolution. If not, see <http://www.gnu.org/licenses/>.
+
+// Gompile takes a zipped .kmz-file, reads in the data, triangulates it with
+// Triangle and then compiles it into a binary file.
 package main
 
 import (
@@ -45,17 +48,20 @@ type (
     polygons int
   }
 
+  // XML struct
   BoundaryIs struct {
     LinearRing struct {
       Coordinates string `xml:"coordinates"`
     }
   }
 
+  // XML struct
   Polygon struct {
     OuterBoundaryIs BoundaryIs `xml:"outerBoundaryIs"`
     InnerBoundaryIs BoundaryIs `xml:"innerBoundaryIs"`
   }
 
+  // XML struct
   Place struct {
     Description string `xml:"description"`
     Name string `xml:"name"`
@@ -69,6 +75,7 @@ type (
     Polygon Polygon `xml:"Polygon"`
   }
 
+  // XML struct
   KML struct {
     XMLName xml.Name `xml:"kml"`
     Document struct {
@@ -82,6 +89,7 @@ type (
 )
 
 
+// Opens the zip and return the entire byte-array.
 func OpenZip (fn string) ([]byte, error) {
   r, err := zip.OpenReader(fn)
   if err != nil {
@@ -105,9 +113,12 @@ func OpenZip (fn string) ([]byte, error) {
   return b, nil
 }
 
+// For a collection of vertices, determineHole determines a random point that
+// is in that vertex. Used for determining holes.
 func determineHole(vertices []vertex) (float64, float64) {
   min := vertices[0]
   max := vertices[0]
+  // Determine box.
   for _, v := range vertices {
     if v.x < min.x {
       min.x = v.x
@@ -122,6 +133,7 @@ func determineHole(vertices []vertex) (float64, float64) {
       max.y = v.y
     }
   }
+  // Pick the points at random and check if they are in the polygon.
   var x, y float64
   for {
     x, y = rand.Float64(), rand.Float64()
@@ -134,6 +146,7 @@ func determineHole(vertices []vertex) (float64, float64) {
   return x, y
 }
 
+// pointInPolygon determines if a certain point is in a polygon.
 func pointInPolygon (point vertex, vertices []vertex) bool {
   yes := false
   for i, j := 0, len(vertices)-1; i < len(vertices); j, i = i, i+1 {
@@ -146,10 +159,13 @@ func pointInPolygon (point vertex, vertices []vertex) bool {
   return yes
 }
 
+// PolygonData writes to a byte array the .poly-file that belongs to the vertex
+// data.
 func PolygonData(p *Polygon) []byte {
   buf := new(bytes.Buffer)
   reg, _ := regexp.Compile("-??[0-9.]+,-??[0-9.]+,-??[0-9]+")
 
+  // Get the numbers.
   matchOuter := reg.FindAllString(p.OuterBoundaryIs.LinearRing.Coordinates, -1)
   matchInner := reg.FindAllString(p.InnerBoundaryIs.LinearRing.Coordinates,
     -1)
@@ -157,6 +173,7 @@ func PolygonData(p *Polygon) []byte {
 
   buf.WriteString(fmt.Sprintf("%d 2 0 0\n", size))
 
+  // Functions for writing the vertices for the inner and outer boundary.
   getCoord := func(results []string) (vertices []vertex) {
     vertices = make([]vertex, len(results))
     for i, str := range results {
@@ -184,6 +201,7 @@ func PolygonData(p *Polygon) []byte {
   outerVert := getCoord(matchOuter)
   innerVert := getCoord(matchInner)
 
+  // Write everything.
   buf.WriteString("# Outer boundary\n")
   writeCoord(outerVert, 0)
   buf.WriteString("# Inner boundary\n")
@@ -204,6 +222,8 @@ func PolygonData(p *Polygon) []byte {
   return buf.Bytes()
 }
 
+// Triangulate calls an external command written by someone else to triangulate
+// the set of vertices.
 func Triangulate(countries chan country, done chan country) {
   country := <-countries
   dirName := "countries/" + country.name + "/"
@@ -227,6 +247,8 @@ func Triangulate(countries chan country, done chan country) {
   done <- country
 }
 
+// Compile uses the list of countries and the outputs of Triangle to make a 
+// binary file containing the correct data.
 func Compile(countries []country) {
   out, err := os.Create("out.dat")
   if err != nil {
@@ -234,14 +256,12 @@ func Compile(countries []country) {
   }
   defer out.Close()
 
+  // Read the triangulated edge and node-files.
   regVert, _ := regexp.Compile("-??\\d+(.\\d+)?")
   regEdge, _ := regexp.Compile("\\d+")
 
   binary.Write(out, binary.LittleEndian, uint16(len(countries)))
   for _, country := range countries {
-    if country.polygons > 10000 {
-      fmt.Printf("Strange for %s\n", country.name)
-    }
     binary.Write(out, binary.LittleEndian, uint16(len(country.name)))
     out.Write([]byte(country.name))
     binary.Write(out, binary.LittleEndian, uint16(country.polygons))
@@ -298,6 +318,8 @@ func Compile(countries []country) {
   }
 }
 
+// Convert takes the unmarshalled KML data to determine the countries and their
+// polygons.
 func Convert (kml *KML) {
   os.RemoveAll("countries/")
   os.Mkdir("countries/", 0755)
@@ -310,6 +332,7 @@ func Convert (kml *KML) {
   done := make(chan country, numCountries)
   for _, folder := range kml.Document.Folders {
     for _, place := range folder.Placemarks {
+      // Each country can run concurrently.
       go func(place Place) {
         fmt.Printf("Creating countries/%s\n", place.Name)
         os.Mkdir(fmt.Sprintf("countries/%s", place.Name), 0755)
@@ -335,6 +358,8 @@ func Convert (kml *KML) {
       }(place)
     }
   }
+  // Although each country can be read and written concurrently, we need to make
+  // sure each file has been finished before we can compile the data.
   c := make([]country, numCountries)
   for i := 0; i < numCountries; i++ {
     c[i] = <-done
