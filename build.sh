@@ -3,6 +3,7 @@
 if [[ "$1" == "clean" ]]; then
   echo "Cleaning..."
   rm -rf .build/
+  rm main
 fi
 
 if [[ ! -d ".build/" ]]; then
