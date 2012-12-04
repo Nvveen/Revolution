@@ -14,7 +14,7 @@
 // Revolution. If not, see <http://www.gnu.org/licenses/>.
 #include "Screen.hpp"
 #include <iostream>
-#include <RendererModules/OpenGL/CEGUIOpenGLRenderer.h>
+#include <CEGUI/RendererModules/OpenGL/CEGUIOpenGLRenderer.h>
 #include <unistd.h>
 
 std::string CEGUIInstallBasePath;

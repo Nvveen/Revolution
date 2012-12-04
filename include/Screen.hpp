@@ -17,7 +17,7 @@
 
 #include <GL/glew.h>
 #include <SDL/SDL.h>
-#include <CEGUI.h>
+#include <CEGUI/CEGUI.h>
 #include "World.hpp"
 
 class Screen {
