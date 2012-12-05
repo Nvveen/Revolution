@@ -32,7 +32,17 @@ ExternalProject_Add(triangle
   INSTALL_COMMAND ""
   BUILD_COMMAND $(MAKE)
 )
+ExternalProject_Add(gompile
+  SOURCE_DIR ${LIB_DIR}/gompile
+  BUILD_IN_SOURCE
+  CONFIGURE_COMMAND ""
+  INSTALL_COMMAND ""
+  BUILD_COMMAND "go build ."
+)
 
 add_executable(main ${revolution_SRCS})
 
-install(PROGRAMS main ${LIB_DIR}/triangle/triangle DESTINATION ${INSTALL_DIR})
+install(PROGRAMS main DESTINATION ${INSTALL_DIR})
+install(PROGRAMS ${LIB_DIR}/triangle/triangle DESTINATION ${INSTALL_DIR})
+install(PROGRAMS ${LIB_DIR}/triangle/showme DESTINATION ${INSTALL_DIR})
+install(PROGRAMS ${LIB_DIR}/gompile/gompile DESTINATION ${INSTALL_DIR})
