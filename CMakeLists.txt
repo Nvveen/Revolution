@@ -34,10 +34,10 @@ ExternalProject_Add(triangle
 )
 ExternalProject_Add(gompile
   SOURCE_DIR ${LIB_DIR}/gompile
-  BUILD_IN_SOURCE
+  BUILD_IN_SOURCE 1
   CONFIGURE_COMMAND ""
   INSTALL_COMMAND ""
-  BUILD_COMMAND "go build ."
+  BUILD_COMMAND $(MAKE)
 )
 
 add_executable(main ${revolution_SRCS})
