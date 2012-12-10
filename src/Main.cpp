@@ -17,7 +17,8 @@
 
 const unsigned int width = 1024, height = 768;
 
-void loop (Screen & sc) {
+void loop ( Screen & sc )
+{
   std::cout << " - entering main loop" << std::endl;
 #ifdef NOCEGUI
   std::cout << "No CEGUI defined" << std::endl;
@@ -29,7 +30,8 @@ void loop (Screen & sc) {
   std::cout << " - leaving main loop" << std::endl;
 }
  
-int main( int argc, char *argv[] ) {
+int main ()
+{
 #ifndef NOCEGUI
   std::cout << " - starting CEGUI" << std::endl;
 #endif

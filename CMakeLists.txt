@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(revolution)
 
-set(CMAKE_CXX_FLAGS_DEBUG "-std=c++0x -g -Werror -Wall -Wfatal-errors -DDEBUG")
+set(CMAKE_CXX_FLAGS "-std=c++0x -W")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -Werror -Wall -Wfatal-errors -DDEBUG -DNOCEGUI")
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/Modules")
 set(INSTALL_DIR "${PROJECT_SOURCE_DIR}/bin")
 set(LIB_DIR "${PROJECT_SOURCE_DIR}/lib")
@@ -26,7 +27,7 @@ link_libraries(${CEGUI_LIBRARY} ${SDL_LIBRARY})
 if(CMAKE_BUILD_TYPE MATCHES Debug)
   find_package(OpenGL)
   find_package(GLEW)
-  link_libraries(${OPENGL_LIBRARY} ${GLEW_LIBRARY})
+  link_libraries(${OPENGL_LIBRARY} ${GLEW_LIBRARIES})
 endif(CMAKE_BUILD_TYPE MATCHES Debug)
 
 include(ExternalProject)

@@ -59,18 +59,25 @@ CEGUI::WindowManager *Screen::initCEGUI() {
 #endif
  
 SDL_Surface *Screen::initSDL() {
-  std::cout << " - initializing SDL" << std::endl;
+  std::cout << "initializing SDL" << std::endl;
   atexit(SDL_Quit);
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     std::cerr << "Unable to initialise SDL: " << SDL_GetError();
     exit(0);
   }
-  SDL_Surface * screen = SDL_SetVideoMode (_w, _h, 0, SDL_OPENGL);
+  SDL_Surface * screen = SDL_SetVideoMode (_w, _h, 0, SDL_OPENGL | SDL_RESIZABLE);
   if (screen == 0) {
     std::cerr << "Unable to set OpenGL videomode: " << SDL_GetError();
     SDL_Quit();
     exit(0);
   }
+#ifdef NOCEGUI
+  GLenum res = glewInit();
+  if (res != GLEW_OK) {
+    std::cerr << "Error: " << glewGetErrorString(res) << std::endl;
+    exit(1);
+  }
+#endif
   SDL_EnableUNICODE(1);
   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 
@@ -280,7 +287,9 @@ void Screen::handleMouseUp( Uint8 button ) {
 std::string Screen::getPath() {
   int max = 256;
   char temp[max];
-  return (getcwd(temp, max) ? std::string(temp) : std::string(""));
+  std::string str = (getcwd(temp, max) ? std::string(temp) : std::string(""));
+  chdir(str.c_str());
+  return str;
 }
 
 void Screen::executeInput( const SDLKey & key ) {
