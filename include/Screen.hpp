@@ -17,7 +17,9 @@
 
 #include <GL/glew.h>
 #include <SDL/SDL.h>
+#ifndef NOCEGUI
 #include <CEGUI/CEGUI.h>
+#endif
 #include "World.hpp"
 
 class Screen {
@@ -35,13 +37,11 @@ class Screen {
     bool _alive;
     double lastTimePulse;
     SDL_Surface *_surface;
-    CEGUI::WindowManager *_winManager;
     World *_world;
     float _mouseRef[2];
     bool _lookAround;
 
     SDL_Surface *initSDL();
-    CEGUI::WindowManager *initCEGUI();
     void setCEGUIPaths();
     void createGUI();
     void injectInput();
@@ -52,6 +52,12 @@ class Screen {
     static std::string getPath();
 
     void executeInput( const SDLKey & key );
+
+    // CEGUI stuff
+#ifndef NOCEGUI
+    CEGUI::WindowManager *_winManager;
+    CEGUI::WindowManager *initCEGUI();
+#endif
 };
 
 inline bool Screen::isOpened() {

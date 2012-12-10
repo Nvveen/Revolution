@@ -1,108 +1,118 @@
 #!/bin/bash
 
-HOME_DIR=$(pwd)
-BUILD_DIR="$HOME_DIR/.build"
-BIN_DIR="$HOME_DIR/bin"
-SRC_DIR="$HOME_DIR/src"
-INCLUDE_DIR="$HOME_DIR/include"
-LIB_DIR="$HOME_DIR/lib"
+DIR="$( cd "$(dirname "$0")" && pwd )"
+SRC_DIR="$DIR/src"
+INC_DIR="$DIR/include"
+BIN_DIR="$DIR/bin"
+LIB_DIR="$DIR/lib"
+BUILD_DIR_REL="$DIR/.build"
+BUILD_DIR_DEBUG="$DIR/.build-debug"
 MAIN_BIN="main"
 CMAKELISTS="CMakeLists.txt"
-NO_BUILD="no"
 
-function buildCMake() {
-  echo "Creating the CMakeLists.txt file...";
-  echo "Give a project name: "; read PROJ_NAME;
+# Flags
+DEBUG=false
+VERBOSE=false
+
+function create() {
+  echo "Creating directories...";
+  mkdir -v "$SRC_DIR" "$LIB_DIR" "$INC_DIR" "$BIN_DIR";
+  echo "int main ()
+{
+  return 0;
+}" > "$SRC_DIR/Main.cpp";
+  echo "What is the name of the project you wish to start?";
+  read PROJ_NAME;
+  echo "Creating $CMAKELISTS file as project $PROJ_NAME...";
   echo 'cmake_minimum_required(VERSION 2.8)
 project('"$PROJ_NAME"')
 
-set(CMAKE_CXX_FLAGS "-std=c++0x -g -Werror -Wall -Wfatal-errors")
+set(CMAKE_CXX_FLAGS_DEBUG "-std=c++0x -g -Werror -Wall -Wfatal-errors -DDEBUG")
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/Modules")
 set(INSTALL_DIR "${PROJECT_SOURCE_DIR}/bin")
 set(LIB_DIR "${PROJECT_SOURCE_DIR}/lib")
 set(INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 set(SRC_DIR "${PROJECT_SOURCE_DIR}/src")
-set(BUILD_DIR "${PROJECT_SOURCE_DIR}/.build")
 set('"$PROJ_NAME"'_SRCS
-  ${SRC_DIR}/
+  ${SRC_DIR}/Main.cpp
 )
 
 include_directories(${INCLUDE_DIR})
 
 add_executable('"$MAIN_BIN"' ${'"$PROJ_NAME"'_SRCS})
-install(PROGRAMS '"$MAIN_BIN"' DESTINATION ${INSTALL_DIR})' > "$CMAKELISTS"
+install(PROGRAMS ${CMAKE_BINARY_DIR}/'"$MAIN_BIN"' DESTINATION ${INSTALL_DIR})' > "$CMAKELISTS"
 }
 
-function clean() {
-  echo "Cleaning..."
-  rm -rf "$BUILD_DIR" 2>/dev/null
-  rm -r "$BIN_DIR/*" &>/dev/null && mkdir "$BIN_DIR" &>/dev/null
-}
-
-function purge() {
-  echo "Are you sure you want to purge? Type \"yes\" if you are certain:";
-  read PURGE;
-  if [ "$PURGE" == "yes" ]; then
-    echo "Purging...";
-    rm -r "$SRC_DIR" "$BIN_DIR" "$INCLUDE_DIR" "$CMAKELISTS" &>/dev/null;
-    rm -r "$BUILD_DIR" "$LIB_DIR" &>/dev/null
-    exit 0;
-  fi
-}
-
-if [ ! -d "src" ] || [ ! -d "include" ] || [ ! -d "bin" ]; then
-  echo "You need at least the src/, include/ and bin/ directories to build a \
-valid project" >&2;
-  echo "Do you want to create these directories to start a project? [y/n]";
-  CREATE="yes"; read CREATE;
-  if [ "$CREATE" == "yes" ] || [ "$CREATE" == "y" ]; then
-    mkdir -v "$BIN_DIR" "$SRC_DIR" "$INCLUDE_DIR" >/dev/null;
-  fi
-  if [ ! -d "lib" ]; then
-    echo "Do you want to create the lib/ directory? [y/n]";
-    CREATE="yes"; read CREATE;
-    if [ "$CREATE" == "yes" ] || [ "$CREATE" == "y" ]; then
-      mkdir -v "$LIB_DIR" >/dev/null;
+function build() {
+  if [ ! -e "$CMAKELISTS" ]; then
+    echo "$CMAKELISTS does not exist, do you want to start a new project? [y/n]";
+    read input;
+    if [ "$input" == "yes" ] || [ "$input" == "y" ] || [ "$input" == "" ]; then
+      create;
+    else
+      echo "Nothing to do, exiting...";
+      exit 0;
     fi
   fi
-  if [ "$CREATE" != "yes" ] && [ "$CREATE" != "y" ]; then
-    echo "Created directories.";
+  BUILD_DIR="$BUILD_DIR_REL"
+  if $DEBUG; then
+    BUILD_DIR="$BUILD_DIR_DEBUG"
   fi
-fi
+  mkdir -v "$BUILD_DIR" &>/dev/null;
+  cd "$BUILD_DIR";
+  CMAKE_OPTION="-DCMAKE_BUILD_TYPE="
+  if $DEBUG; then
+    CMAKE_OPTION=${CMAKE_OPTION}"Debug"
+  else
+    CMAKE_OPTION=${CMAKE_OPTION}"Release"
+  fi
+  cmake ${CMAKE_OPTION} ..;
+  if $VERBOSE; then
+    make VERBOSE=1;
+  else
+    make;
+  fi
+  make install;
+}
 
-while getopts ":bcd:np" flag; do
+function clean_builds() {
+  echo "Cleaning...";
+  rm -rf "$BUILD_DIR_REL"* &>/dev/null;
+  rm "$BIN_DIR"/* &>/dev/null;
+}
+
+function print_help() {
+  echo "Help here";
+}
+
+while getopts ":cdsv" flag; do
   case $flag in
-    b)
-      buildCMake;
-      exit 0;
-      ;;
     c)
-      clean;
+      clean_builds;
       exit 0;
       ;;
     d)
-      MAIN_BIN="$OPTARG"
+      DEBUG=true
       ;;
-    n)
-      NO_BUILD="yes"
+    s)
+      create;
+      exit 0;
       ;;
-    p)
-      purge
+    v)
+      VERBOSE=true
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2;
+      print_help;
+      exit 1;
       ;;
     \:)
       echo "Option -$OPTARG requires an argument" >&2;
+      print_help;
+      exit 1;
       ;;
   esac
 done
 
-if [ "$NO_BUILD" == "no" ]; then
-  mkdir .build &>/dev/null
-  cd .build
-  cmake ..
-  make && make install
-else
-  echo "Running quietly.";
-fi
+cd "$DIR";
+build;

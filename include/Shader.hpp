@@ -58,44 +58,4 @@ inline GLuint Shader::getShaderProgram() {
     return _shaderProgram;
 }
 
-inline void Shader::bind()
-{
-    if ( !_bound )
-        glUseProgram(_shaderProgram);
-    _bound = true;
-}
-
-inline void Shader::unbind() {
-    if ( _bound )
-        glUseProgram(0);
-    _bound = false;
-}
-
-inline void Shader::setUniformLocation( std::string name ) {
-    bind();
-    try {
-        GLint loc = glGetUniformLocation(_shaderProgram, name.c_str());
-        _uniformLocs[name] = loc;
-        if ( loc == -1 ) throw true;
-        GLenum error = glGetError();
-        if ( error != GL_NO_ERROR ) throw error;
-    }
-    catch ( bool e ) {
-        if ( e ) {
-            std::cerr << "Error finding uniform " << name;
-            std::cerr << " in shaderprogram " << _shaderProgram << "\n";
-        }
-    }
-    catch ( GLenum error ) {
-        if ( error == GL_INVALID_VALUE ) {
-            std::cerr << "Invalid value " << _shaderProgram << " used.\n";
-        }
-        else if ( error == GL_INVALID_OPERATION ) {
-            std::cerr << "Invalid operation while setting uniform ";
-            std::cerr << name << " in shaderProgram " << _shaderProgram << "\n";
-        }
-    }
-    unbind();
-}
-
 #endif

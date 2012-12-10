@@ -14,16 +14,24 @@
 // Revolution. If not, see <http://www.gnu.org/licenses/>.
 #include "Screen.hpp"
 #include <iostream>
+#ifndef NOCEGUI
 #include <CEGUI/RendererModules/OpenGL/CEGUIOpenGLRenderer.h>
+#endif
 #include <unistd.h>
 
+#ifndef NOCEGUI
 std::string CEGUIInstallBasePath;
+#endif
 
 Screen::Screen( const unsigned int & width, const unsigned int & height ) :
   _w(width), _h(height), _alive(true) {
+#ifndef NOCEGUI
   CEGUIInstallBasePath = getPath() + "/";
+#endif
   _surface = initSDL();
+#ifndef NOCEGUI
   _winManager = initCEGUI();
+#endif
   _lookAround = false;
   createGUI();
   lastTimePulse = 0.001 * static_cast<double>(SDL_GetTicks());
@@ -32,10 +40,13 @@ Screen::Screen( const unsigned int & width, const unsigned int & height ) :
 Screen::~Screen() {
   std::cout << "Cleaning up the screen..." << std::endl;
   delete _world;
+#ifndef NOCEGUI
   delete _winManager;
+#endif
   SDL_FreeSurface(_surface);
 }
 
+#ifndef NOCEGUI
 CEGUI::WindowManager *Screen::initCEGUI() {
   std::cout << " - initializing CEGUI" << std::endl;
   CEGUI::OpenGLRenderer::bootstrapSystem();
@@ -45,6 +56,7 @@ CEGUI::WindowManager *Screen::initCEGUI() {
       "MouseArrow");
   return &(CEGUI::WindowManager::getSingleton());
 }
+#endif
  
 SDL_Surface *Screen::initSDL() {
   std::cout << " - initializing SDL" << std::endl;
@@ -75,8 +87,10 @@ void Screen::clear() {
 void Screen::render() {
   injectInput();
   injectTimePulse(lastTimePulse);
+#ifndef NOCEGUI
   // Renders the GUI:
   CEGUI::System::getSingleton().renderGUI();
+#endif
   // Render the world
   _world->draw();
   // Updates the screen:
@@ -91,9 +105,11 @@ void Screen::injectInput() {
     switch (e.type) {
       // Mouse section:
       case SDL_MOUSEMOTION:
+#ifndef NOCEGUI
         // We inject the mouse position directly here:
         CEGUI::System::getSingleton().injectMousePosition(static_cast<float>(
               e.motion.x), static_cast<float>(e.motion.y));
+#endif
         if (_lookAround) {
           _world->getCamera().look(_mouseRef[0], _mouseRef[1], e.motion.x,
               e.motion.y);
@@ -108,27 +124,35 @@ void Screen::injectInput() {
         break;
       // Keyboard section:
       case SDL_KEYDOWN:
+#ifndef NOCEGUI
         CEGUI::System::getSingleton().injectKeyDown(e.key.keysym.scancode);
+#endif
         /*
          * Managing the character is more difficult, we have to use a translated
          * unicode value:
          *
          */
         if ((e.key.keysym.unicode & 0xFF80) == 0) {
+#ifndef NOCEGUI
           CEGUI::System::getSingleton().injectChar(e.key.keysym.unicode & 0x7F);
+#endif
           executeInput(e.key.keysym.sym);
         }
         break;
       case SDL_KEYUP:
+#ifndef NOCEGUI
         CEGUI::System::getSingleton().injectKeyUp( e.key.keysym.scancode );
+#endif
         break;
       // A WM quit event occured:
       case SDL_QUIT:
         _alive = false;
         break;
       case SDL_VIDEORESIZE:
+#ifndef NOCEGUI
         CEGUI::System::getSingleton().notifyDisplaySizeChanged(CEGUI::Size(
               e.resize.w, e.resize.h));
+#endif
         break;
     }
   }
@@ -136,11 +160,14 @@ void Screen::injectInput() {
 
 void Screen::injectTimePulse( double & ltp ) {
   double current = 0.001 * SDL_GetTicks();
+#ifndef NOCEGUI
   CEGUI::System::getSingleton().injectTimePulse(static_cast<float>(current -
         ltp));
+#endif
   ltp = current;
 }
  
+#ifndef NOCEGUI
 void Screen::setCEGUIPaths() {
 	// Initialises the required directories for the DefaultResourceProvider:
 	CEGUI::DefaultResourceProvider & defaultResProvider =
@@ -181,45 +208,39 @@ void Screen::setCEGUIPaths() {
 	if ( parser->isPropertyPresent("SchemaDefaultResourceGroup"))
 		parser->setProperty("SchemaDefaultResourceGroup", "schemas");
 }
+#endif
  
 void Screen::createGUI() {
   std::cout << "Creating the GUI..." << std::endl;
   _world = new World(_w, _h);
-  // Hier komt de eigen UI in
-  // std::cout << " - creating the GUI" << std::endl;
-  // CEGUI::DefaultWindow & rootWin = *static_cast<CEGUI::DefaultWindow*>(
-  //     _winManager->createWindow("DefaultWindow", "Root"));
-  // CEGUI::System::getSingleton().setGUISheet(&rootWin);
-  // CEGUI::FrameWindow & myWin = *static_cast<CEGUI::FrameWindow*>(
-  //     _winManager->createWindow("TaharezLook/FrameWindow", "Demo Window"));
-  // rootWin.addChildWindow(&myWin);
-  // myWin.setPosition(CEGUI::UVector2( cegui_reldim(0.25f), cegui_reldim(0.25f)));
-  // myWin.setSize(CEGUI::UVector2(cegui_reldim(0.5f), cegui_reldim(0.5f)));
-  // myWin.setMaxSize(CEGUI::UVector2(cegui_reldim(1.0f), cegui_reldim(1.0f)));
-  // myWin.setMinSize(CEGUI::UVector2(cegui_reldim(0.1f), cegui_reldim(0.1f)));
-  // myWin.setText("Hello World! This is a minimal SDL+OpenGL+CEGUI test.");
 }
 
 void Screen::handleMouseDown( Uint8 button, const int & x, const int & y ) {
   switch ( button ) {
+#ifndef NOCEGUI
     case SDL_BUTTON_LEFT:
       CEGUI::System::getSingleton().injectMouseButtonDown(CEGUI::LeftButton);
       break;
     case SDL_BUTTON_MIDDLE:
       CEGUI::System::getSingleton().injectMouseButtonDown(CEGUI::MiddleButton);
       break;
+#endif
     case SDL_BUTTON_RIGHT:
+#ifndef NOCEGUI
       CEGUI::System::getSingleton().injectMouseButtonDown(CEGUI::RightButton);
+#endif
       _lookAround = true;
       _mouseRef[0] = x; _mouseRef[1] = y;
       SDL_ShowCursor(SDL_DISABLE);
       break;
+#ifndef NOCEGUI
     case SDL_BUTTON_WHEELDOWN:
       CEGUI::System::getSingleton().injectMouseWheelChange(-1);
       break;
     case SDL_BUTTON_WHEELUP:
       CEGUI::System::getSingleton().injectMouseWheelChange(+1);
       break;
+#endif
     default:
       std::cout << "handleMouseDown ignored '" << static_cast<int>(button)
          << "'" << std::endl;
@@ -229,14 +250,18 @@ void Screen::handleMouseDown( Uint8 button, const int & x, const int & y ) {
  
 void Screen::handleMouseUp( Uint8 button ) {
   switch (button) {
+#ifndef NOCEGUI
     case SDL_BUTTON_LEFT:
       CEGUI::System::getSingleton().injectMouseButtonUp(CEGUI::LeftButton);
       break;
     case SDL_BUTTON_MIDDLE:
       CEGUI::System::getSingleton().injectMouseButtonUp(CEGUI::MiddleButton);
       break;
+#endif
     case SDL_BUTTON_RIGHT:
+#ifndef NOCEGUI
       CEGUI::System::getSingleton().injectMouseButtonUp(CEGUI::RightButton);
+#endif
       _lookAround = false;
       SDL_ShowCursor(SDL_ENABLE);
       break;
