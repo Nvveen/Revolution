@@ -53,7 +53,7 @@ void Drawable::draw ( Camera * const cam )
   glEnableVertexAttribArray(0);
 
   glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-  glDrawElements(GL_TRIANGLES, _ind.size(), GL_UNSIGNED_INT, (void *)0);
+  glDrawElements(GL_TRIANGLES, _ind.size()*3, GL_UNSIGNED_INT, (void *)0);
 
   glDisableVertexAttribArray(0);
   glBindVertexArray(0);
@@ -68,13 +68,13 @@ void Drawable::addData ( std::vector<Vec3> const & vertices,
   glBindVertexArray(_vao);
 
   glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*_verts.size()*3, &_verts[0],
+  glBufferData(GL_ARRAY_BUFFER, sizeof(GLdouble)*_verts.size()*3, &_verts[0],
       GL_STATIC_DRAW);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*3,
+  glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, sizeof(GLdouble)*3,
       (void *)0);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLint)*_ind.size()*3, &_ind[0],
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*_ind.size()*3, &_ind[0],
       GL_STATIC_DRAW);
 
   glBindVertexArray(0);

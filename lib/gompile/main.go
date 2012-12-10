@@ -394,5 +394,5 @@ func main () {
   Convert(&kml)
 
   os.Chdir(pwd)
-  os.RemoveAll(tmpDir)
+  // os.RemoveAll(tmpDir)
 }

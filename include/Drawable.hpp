@@ -16,6 +16,7 @@
 #define DRAWABLE_HPP
 
 #include <vector>
+#include <string>
 #include "Shader.hpp"
 #include "Camera.hpp"
 
@@ -34,6 +35,8 @@ class Drawable {
                    std::vector<IVec3> const & indices );
 
     void draw ( Camera * const cam );
+
+    std::string name;
   protected:
   private:
     Shader *_shader;

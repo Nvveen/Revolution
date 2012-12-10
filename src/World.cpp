@@ -69,7 +69,7 @@ void World::init ()
         double x, y;
         file.read(reinterpret_cast<char *>(&x), sizeof(double));
         file.read(reinterpret_cast<char *>(&y), sizeof(double));
-        verts.push_back(Vec3(x, y, 0));
+        verts.push_back(Vec3(x, -10, y));
       }
       file.read(reinterpret_cast<char *>(&numEdges), sizeof(unsigned int));
       for (unsigned int k = 0; k < numEdges; k++) {
@@ -81,6 +81,8 @@ void World::init ()
       }
     }
     d->addData(verts, ind);
+    d->name = std::string(name);
+    std::cout << d->name << std::endl;
     _drawables.push_back(d);
   }
   std::cout << "Done loading countries..." << std::endl;
@@ -90,6 +92,5 @@ void World::draw()
 {
   for (auto p : _drawables) {
     p->draw(_cam);
-    break;
   }
 }

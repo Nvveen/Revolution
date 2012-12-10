@@ -82,7 +82,8 @@ SDL_Surface *Screen::initSDL() {
   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 
   glEnable(GL_DEPTH_TEST);
-  glEnable(GL_CULL_FACE);
+  // glEnable(GL_CULL_FACE);
+  glDisable(GL_CULL_FACE);
 
   return screen;
 }
