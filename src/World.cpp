@@ -90,5 +90,6 @@ void World::draw()
 {
   for (auto p : _drawables) {
     p->draw(_cam);
+    break;
   }
 }

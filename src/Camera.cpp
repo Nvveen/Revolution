@@ -36,6 +36,12 @@ void Camera::look( const float & refX, const float & refY, const float & i,
   _verticalAngle += mouseSpeed * (refY-j);
 }
 
+void Camera::zoom ( float const & val )
+{
+  _initialFoV -= val;
+  getProjection();
+}
+
 glm::mat4 Camera::getProjection() {
   float fov = _initialFoV;
   return glm::perspective(fov, _ratio, 0.1f, 100.0f);

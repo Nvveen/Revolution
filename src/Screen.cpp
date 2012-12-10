@@ -240,14 +240,18 @@ void Screen::handleMouseDown( Uint8 button, const int & x, const int & y ) {
       _mouseRef[0] = x; _mouseRef[1] = y;
       SDL_ShowCursor(SDL_DISABLE);
       break;
-#ifndef NOCEGUI
     case SDL_BUTTON_WHEELDOWN:
+#ifndef NOCEGUI
       CEGUI::System::getSingleton().injectMouseWheelChange(-1);
+#endif
+      _world->getCamera().zoom(1.0f);
       break;
     case SDL_BUTTON_WHEELUP:
+#ifndef NOCEGUI
       CEGUI::System::getSingleton().injectMouseWheelChange(+1);
-      break;
 #endif
+      _world->getCamera().zoom(-1.0f);
+      break;
     default:
       std::cout << "handleMouseDown ignored '" << static_cast<int>(button)
          << "'" << std::endl;
