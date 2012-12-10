@@ -60,8 +60,8 @@ void Drawable::draw ( Camera * const cam )
   _shader->unbind();
 }
 
-void Drawable::addData ( std::vector<glm::vec3> const & vertices,
-                         std::vector<glm::ivec3> const & indices )
+void Drawable::addData ( std::vector<Vec3> const & vertices,
+                         std::vector<IVec3> const & indices )
 {
   _verts = vertices;
   _ind = indices;

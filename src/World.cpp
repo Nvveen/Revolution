@@ -17,6 +17,7 @@
 #include <sstream>
 #include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/random.hpp>
 #include "World.hpp"
 
 World::World(const unsigned int & width, const unsigned int & height)
@@ -47,14 +48,15 @@ void World::init ()
   std::cout << "Loading countries..." << std::endl;
 
   std::ifstream file;
-  file.open("src/go/out.dat", std::ios::binary);
+  file.open("share/out.dat", std::ios::binary);
   unsigned short numCountries = 0;
   file.read(reinterpret_cast<char *>(&numCountries), sizeof(unsigned short));
   for (unsigned short i = 0; i < numCountries; i++) {
-    Drawable *d = new Drawable(_shader, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+    glm::vec4 randomColor = glm::vec4(glm::vecRand3(0.0f, 1.0f), 1.0f);
+    Drawable *d = new Drawable(_shader, randomColor);
     unsigned short nameLength, numPolygons;
-    std::vector<glm::vec3> verts;
-    std::vector<glm::ivec3> ind;
+    std::vector<Vec3> verts;
+    std::vector<IVec3> ind;
     file.read(reinterpret_cast<char *>(&nameLength), sizeof(unsigned short));
     char *name = new char[nameLength+1];
     file.read(reinterpret_cast<char *>(&name[0]), nameLength);
@@ -64,10 +66,10 @@ void World::init ()
       unsigned int numVerts, numEdges;
       file.read(reinterpret_cast<char *>(&numVerts), sizeof(unsigned int));
       for (unsigned int k = 0; k < numVerts; k++) {
-        long double x, y;
+        double x, y;
         file.read(reinterpret_cast<char *>(&x), sizeof(double));
         file.read(reinterpret_cast<char *>(&y), sizeof(double));
-        verts.push_back(glm::vec3(x, y, 0));
+        verts.push_back(Vec3(x, y, 0));
       }
       file.read(reinterpret_cast<char *>(&numEdges), sizeof(unsigned int));
       for (unsigned int k = 0; k < numEdges; k++) {
@@ -75,7 +77,7 @@ void World::init ()
         file.read(reinterpret_cast<char *>(&x), sizeof(unsigned int));
         file.read(reinterpret_cast<char *>(&y), sizeof(unsigned int));
         file.read(reinterpret_cast<char *>(&z), sizeof(unsigned int));
-        ind.push_back(glm::ivec3(x, y, z));
+        ind.push_back(IVec3(x, y, z));
       }
     }
     d->addData(verts, ind);

@@ -19,21 +19,26 @@
 #include "Shader.hpp"
 #include "Camera.hpp"
 
+#include <glm/gtc/type_precision.hpp>
+
+typedef glm::gtc::type_precision::f64vec3 Vec3;
+typedef glm::ivec3 IVec3;
+
 class Drawable {
   public:
     Drawable ();
     Drawable ( Shader * const shader, glm::vec4 const & primary );
     virtual ~Drawable ();
 
-    void addData ( std::vector<glm::vec3> const & vertices,
-                   std::vector<glm::ivec3> const & indices );
+    void addData ( std::vector<Vec3> const & vertices,
+                   std::vector<IVec3> const & indices );
 
     void draw ( Camera * const cam );
   protected:
   private:
     Shader *_shader;
-    std::vector<glm::vec3> _verts;
-    std::vector<glm::ivec3> _ind;
+    std::vector<Vec3> _verts;
+    std::vector<IVec3> _ind;
     glm::vec4 _primaryColor;
 
     GLuint _vao, _vbo, _ibo;

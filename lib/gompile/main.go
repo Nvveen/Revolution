@@ -32,10 +32,12 @@ import (
   "regexp"
   "math/rand"
   "math"
+  "path"
 )
 
 var (
   numCountries = 0
+  pwd, tmpDir string
 )
 
 type (
@@ -226,11 +228,11 @@ func PolygonData(p *Polygon) []byte {
 // the set of vertices.
 func Triangulate(countries chan country, done chan country) {
   country := <-countries
-  dirName := "countries/" + country.name + "/"
+  dirName := tmpDir+"/countries/" + country.name + "/"
   fmt.Printf("Triangulating %s\n", country.name)
   for i := 0; i < country.polygons; i++ {
     fileName := fmt.Sprintf("poly-%d.poly", i)
-    command := exec.Command("./triangle", dirName + fileName)
+    command := exec.Command(pwd+"/bin/triangle", dirName + fileName)
     std := new(bytes.Buffer)
     command.Stderr, command.Stdout = std, std
     err := command.Run()
@@ -250,7 +252,7 @@ func Triangulate(countries chan country, done chan country) {
 // Compile uses the list of countries and the outputs of Triangle to make a 
 // binary file containing the correct data.
 func Compile(countries []country) {
-  out, err := os.Create("out.dat")
+  out, err := os.Create(pwd+"/share/out.dat")
   if err != nil {
     log.Fatal(err)
   }
@@ -266,7 +268,7 @@ func Compile(countries []country) {
     out.Write([]byte(country.name))
     binary.Write(out, binary.LittleEndian, uint16(country.polygons))
     for i := 0; i < country.polygons; i++ {
-      fileName := fmt.Sprintf("countries/%s/poly-%d.1", country.name, i)
+      fileName := fmt.Sprintf(tmpDir+"/countries/%s/poly-%d.1", country.name, i)
       // Get vertices
       vertFile, err := os.Open(fileName + ".node")
       if err != nil {
@@ -321,8 +323,7 @@ func Compile(countries []country) {
 // Convert takes the unmarshalled KML data to determine the countries and their
 // polygons.
 func Convert (kml *KML) {
-  os.RemoveAll("countries/")
-  os.Mkdir("countries/", 0755)
+  os.Mkdir(tmpDir+"/countries", 0755)
   for i, _:= range kml.Document.Folders {
     for _, _ = range kml.Document.Folders[i].Placemarks {
       numCountries++
@@ -335,11 +336,11 @@ func Convert (kml *KML) {
       // Each country can run concurrently.
       go func(place Place) {
         fmt.Printf("Creating countries/%s\n", place.Name)
-        os.Mkdir(fmt.Sprintf("countries/%s", place.Name), 0755)
+        os.Mkdir(fmt.Sprintf(tmpDir+"/countries/%s", place.Name), 0755)
 
         writePolygon := func(p *Polygon, n int) {
-          out, _ := os.Create(fmt.Sprintf("countries/%s/poly-%d.poly", place.Name,
-            n))
+          out, _ := os.Create(fmt.Sprintf(tmpDir+"/countries/%s/poly-%d.poly",
+            place.Name, n))
           out.Write(PolygonData(p))
           out.Close()
         }
@@ -371,12 +372,19 @@ func main () {
   if len(os.Args) < 2 {
     log.Fatalln("Not enough arguments to commandline")
   }
-  fmt.Printf("Unzipping %s\n", os.Args[1])
-  b, err := OpenZip(os.Args[1])
+  pwd, _ = os.Getwd()
+  tmpDir, _ = ioutil.TempDir("", "gompile")
+  countriesFile := os.Args[1]
+  if !path.IsAbs(countriesFile) {
+    countriesFile = path.Clean(path.Join(pwd, os.Args[1]))
+  }
+  os.Chdir(tmpDir)
+  fmt.Printf("Unzipping %s\n", countriesFile)
+  b, err := OpenZip(countriesFile)
   if err != nil {
     log.Fatal(err)
   }
-  fmt.Printf("Unmarshalling %s...\n", os.Args[1])
+  fmt.Printf("Unmarshalling %s...\n", countriesFile)
   kml := KML{}
   err = xml.Unmarshal(b, &kml)
   if err != nil {
@@ -384,4 +392,7 @@ func main () {
   }
 
   Convert(&kml)
+
+  os.Chdir(pwd)
+  os.RemoveAll(tmpDir)
 }
