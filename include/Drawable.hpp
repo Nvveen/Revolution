@@ -33,9 +33,6 @@ class Drawable {
     Drawable ( Shader * const shader, glm::vec4 const & primary );
     virtual ~Drawable ();
 
-    void addData ( std::vector<Vec3> const & vertices,
-                   std::vector<IVec3> const & indices );
-
     void addPolygons ( std::vector<Polygon> const & polygons );
 
     void draw ( Camera * const cam );
@@ -44,9 +41,8 @@ class Drawable {
   protected:
   private:
     Shader *_shader;
-    std::vector<Vec3> _verts;
-    std::vector<IVec3> _ind;
     std::vector<Polygon> _polygons;
+    unsigned int _numTriangles;
     glm::vec4 _primaryColor;
 
     GLuint _vao, _vbo, _ibo;

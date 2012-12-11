@@ -21,12 +21,13 @@ Camera::Camera (const unsigned int & width, const unsigned int & height) {
   _ratio = float(width)/float(height);
 
   _horizontalAngle = M_PI;
-  _verticalAngle = -45.0f;
+  _verticalAngle = 45.0f;
   _pos = glm::vec3(0, 5, 5);
 }
 
 void Camera::move( const float & deltaX, const float & deltaY ) {
   _pos += glm::vec3(0.2*deltaX, 0, 0.2*deltaY);
+  std::cout << _pos[0] << " " << _pos[1] << " " << _pos[2] << std::endl;
 }
 
 void Camera::look( const float & refX, const float & refY, const float & i,
@@ -44,7 +45,7 @@ void Camera::zoom ( float const & val )
 
 glm::mat4 Camera::getProjection() {
   float fov = _initialFoV;
-  return glm::perspective(fov, _ratio, 0.1f, 100.0f);
+  return glm::perspective(fov, _ratio, 0.1f, 1000.0f);
 }
 
 glm::mat4 Camera::getView() {
