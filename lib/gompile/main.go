@@ -33,6 +33,7 @@ import (
   "math/rand"
   "math"
   "path"
+  "sort"
 )
 
 var (
@@ -49,6 +50,8 @@ type (
     name string
     polygons int
   }
+
+  countryList []country
 
   // XML struct
   BoundaryIs struct {
@@ -90,6 +93,17 @@ type (
   }
 )
 
+func (c countryList) Len() (int) {
+  return len(c)
+}
+
+func (c countryList) Swap(i, j int) {
+  c[i], c[j] = c[j], c[i]
+}
+
+func (c countryList) Less(i, j int) bool {
+  return c[i].name < c[j].name
+}
 
 // Opens the zip and return the entire byte-array.
 func OpenZip (fn string) ([]byte, error) {
@@ -251,7 +265,7 @@ func Triangulate(countries chan country, done chan country) {
 
 // Compile uses the list of countries and the outputs of Triangle to make a 
 // binary file containing the correct data.
-func Compile(countries []country) {
+func Compile(countries countryList) {
   out, err := os.Create(pwd+"/share/out.dat")
   if err != nil {
     log.Fatal(err)
@@ -361,10 +375,11 @@ func Convert (kml *KML) {
   }
   // Although each country can be read and written concurrently, we need to make
   // sure each file has been finished before we can compile the data.
-  c := make([]country, numCountries)
+  c := make(countryList, numCountries)
   for i := 0; i < numCountries; i++ {
     c[i] = <-done
   }
+  sort.Sort(c)
   Compile(c)
 }
 

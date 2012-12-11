@@ -82,7 +82,6 @@ void World::init ()
     }
     d->addData(verts, ind);
     d->name = std::string(name);
-    std::cout << d->name << std::endl;
     _drawables.push_back(d);
   }
   std::cout << "Done loading countries..." << std::endl;
