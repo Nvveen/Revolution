@@ -25,6 +25,8 @@
 typedef glm::gtc::type_precision::f64vec3 Vec3;
 typedef glm::ivec3 IVec3;
 
+struct Polygon;
+
 class Drawable {
   public:
     Drawable ();
@@ -34,6 +36,8 @@ class Drawable {
     void addData ( std::vector<Vec3> const & vertices,
                    std::vector<IVec3> const & indices );
 
+    void addPolygons ( std::vector<Polygon> const & polygons );
+
     void draw ( Camera * const cam );
 
     std::string name;
@@ -42,12 +46,18 @@ class Drawable {
     Shader *_shader;
     std::vector<Vec3> _verts;
     std::vector<IVec3> _ind;
+    std::vector<Polygon> _polygons;
     glm::vec4 _primaryColor;
 
     GLuint _vao, _vbo, _ibo;
     glm::mat4 _model;
 
     void init ();
+};
+
+struct Polygon {
+  std::vector<Vec3> vertices;
+  std::vector<IVec3> indices;
 };
 
 #endif

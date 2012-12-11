@@ -79,3 +79,36 @@ void Drawable::addData ( std::vector<Vec3> const & vertices,
 
   glBindVertexArray(0);
 }
+
+void Drawable::addPolygons ( std::vector<Polygon> const & polygons )
+{
+  // Determine size of buffers
+  unsigned int vboSize, iboSize = 0;
+  for ( auto poly : polygons ) {
+    vboSize += poly.vertices.size();
+    iboSize += poly.indices.size();
+  }
+  glBindVertexArray(_vao);
+  glBindBuffer(GL_ARRAY_BUFFER, _vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, _ibo);
+  // Prepare buffers
+  glBufferData(GL_ARRAY_BUFFER, sizeof(GLdouble)*vboSize*3, NULL,
+               GL_DYNAMIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*iboSize*3, NULL,
+               GL_DYNAMIC_DRAW);
+  // Write data to buffers in parts
+  unsigned int vboOffset, iboOffset = 0;
+  for (auto poly : polygons) {
+    glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLdouble)*vboOffset*3,
+                    poly.vertices.size(), &poly.vertices[0]);
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*iboOffset*3,
+                    poly.indices.size(), &poly.indices[0]);
+    vboOffset += poly.vertices.size();
+    iboOffset += poly.indices.size();
+    _polygons.push_back(poly);
+  }
+
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
+}
