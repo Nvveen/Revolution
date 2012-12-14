@@ -20,11 +20,15 @@ package main
 import (
   "archive/zip"
   "os"
+  "os/exec"
   "fmt"
   "io/ioutil"
   "path"
   "encoding/xml"
   "regexp"
+  "sync"
+  "math/rand"
+  "math"
 )
 
 var (
@@ -94,52 +98,58 @@ func OpenZip(fn string) (b []byte) {
   return b
 }
 
+func NumCountries(kml *xmlKML) (int) {
+  nr := 0
+  for i, _ := range kml.Document.Folders {
+    for _, _ = range kml.Document.Folders[i].Placemarks {
+      nr++
+    }
+  }
+  return nr
+}
+
 func ReadKML(kml *xmlKML, countries chan Country) {
-  num := 0
-  countries = make(chan Country)
+  var wg sync.WaitGroup
   for i, folder := range kml.Document.Folders {
     for j, _ := range folder.Placemarks {
-      num++
+      wg.Add(1)
+      // Iterate over every place and, in a seperate goroutine, read
+      // all vertex data, pass it to the right channels and exit.
       go func(p, q int) {
         place := kml.Document.Folders[p].Placemarks[q]
         country := Country{Name: place.Name}
+        fmt.Printf("Reading %s\n", country.Name)
         // Unify polygon interfacing
         polygons := &place.MultiGeometry
         if len(place.MultiGeometry) == 0 {
           polygons = &[]xmlPolygon{place.Polygon}
         }
         country.Regions = make([]Region, len(*polygons))
+        // Extract inner and outer vertices from the string data representing
+        // cleartext coordinates gathered from the XML data.
         for r, _ := range *polygons {
           outer, inner := ExtractVertices(&(*polygons)[r])
           country.Regions[r].OuterVertices = outer
           country.Regions[r].InnerVertices = inner
         }
         countries <- country
+        wg.Done()
       }(i, j)
     }
   }
-  for i := 0; i < num; i++ {
-    c := <-countries
-    if c.Name == "Afghanistan" {
-      fmt.Printf("Name: %s\nRegions (%d)\n", c.Name, len(c.Regions))
-      for _, region := range c.Regions {
-        fmt.Printf("\tOuter Boundary (%d):\n", len(region.OuterVertices))
-        for _, vertex := range region.OuterVertices {
-          fmt.Printf("\t\t%v\n", vertex)
-        }
-        for _, vertex := range region.InnerVertices {
-          fmt.Printf("\t\t%v\n", vertex)
-        }
-      }
-    }
-  }
+  wg.Wait()
+  return
 }
 
 func ExtractVertices(p *xmlPolygon) ([]Vertex, []Vertex) {
-  reg, _ := regexp.Compile(`-??[\d]+\.[\d]+,[\d]+\.[\d]+`)
+  reg, _ := regexp.Compile(`-??[\d]+(\.[\d]+)?,-??[\d]+\.([\d]+)?`)
+  // Functionality for inner and outer boundaries is the same, so just
+  // use a function.
   f := func(boundary xmlBoundaryIs) []Vertex {
     vertData := boundary.LinearRing.Coordinates
+    // Find all matches.
     matches := reg.FindAllString(vertData, -1)
+    // Scan each match into a vertex, and add it to the list.
     verts := make([]Vertex, len(matches))
     for i, match := range matches {
       fmt.Sscanf(match, "%f,%f", &verts[i].X, &verts[i].Y)
@@ -147,6 +157,110 @@ func ExtractVertices(p *xmlPolygon) ([]Vertex, []Vertex) {
     return verts
   }
   return f(p.OuterBoundaryIs), f(p.InnerBoundaryIs)
+}
+
+func WritePoly (country Country) {
+  countryPath := path.Join(tmpDir, country.Name)
+  fmt.Printf("Writing %s\n", countryPath)
+  os.Mkdir(countryPath, 0755)
+  for i, region := range country.Regions {
+    polyFile, err := os.Create(path.Join(countryPath,
+                                         fmt.Sprintf("poly-%d.poly", i)))
+    if err != nil {
+      panic(err)
+    }
+
+    size := len(region.OuterVertices) + len(region.InnerVertices)
+    polyFile.WriteString(fmt.Sprintf("%d 2 0 0\n", size))
+    writeVertices := func(vertices []Vertex, offset int) {
+      for j, vertex := range vertices {
+        polyFile.WriteString(fmt.Sprintf("%d %f %f\n", j+offset, vertex.X,
+                                         vertex.Y))
+      }
+    }
+    writeEdges := func(vertices []Vertex, offset int) {
+      for j, _ := range vertices {
+        endpoint := j+offset+1
+        if endpoint == len(vertices)+offset {
+          endpoint = offset
+        }
+        polyFile.WriteString(fmt.Sprintf("%d %d %d 0\n", j+offset, j+offset,
+                                         endpoint))
+      }
+    }
+    writeVertices(region.OuterVertices, 0)
+    writeVertices(region.InnerVertices, len(region.OuterVertices))
+    polyFile.WriteString(fmt.Sprintf("%d\n", size))
+    writeEdges(region.OuterVertices, 0)
+    writeEdges(region.InnerVertices, len(region.OuterVertices))
+
+    if len(region.InnerVertices) > 0 {
+      polyFile.WriteString("1\n")
+      v := DetermineHole(region.InnerVertices)
+      polyFile.WriteString(fmt.Sprintf("0 %f %f\n", v.X, v.Y))
+    } else {
+      polyFile.WriteString("0\n")
+    }
+
+    polyFile.Close()
+  }
+}
+
+func DetermineHole(vertices []Vertex) (Vertex) {
+  min := vertices[0]
+  max := vertices[0]
+  for _, v := range vertices {
+    if v.X < min.X {
+      min.X = v.X
+    }
+    if v.Y < min.Y {
+      min.Y = v.Y
+    }
+    if v.X > max.X {
+      max.X = v.X
+    }
+    if v.Y > max.Y {
+      max.Y = v.Y
+    }
+  }
+  var x, y float64
+  for {
+    x, y = rand.Float64(), rand.Float64()
+    x = (x * math.Abs(max.X-min.X)) + min.X
+    y = (y * math.Abs(max.Y-min.Y)) + min.Y
+    pip := false
+    for i, j := 0, len(vertices)-1; i < len(vertices); j, i = i, i+1 {
+      if ((vertices[i].Y > y) != (vertices[j].Y > y) &&
+          (x < (vertices[j].X-vertices[i].X) * (y - vertices[i].Y /
+          (vertices[j].Y - vertices[i].Y) + vertices[i].X))) {
+        pip = !pip
+      }
+    }
+    if pip {
+      break
+    }
+  }
+  return Vertex{x, y}
+}
+
+func (c *Country) FindSuperset() {
+}
+
+func Triangulate(country Country) {
+  defer func() {
+    if r := recover(); r != nil {
+      fmt.Fprintf(os.Stderr, "Error: %s: %s\n", country.Name, r)
+    }
+  }()
+  fmt.Printf("Triangulating %s\n", country.Name)
+  for i, _ := range country.Regions {
+    filePath := path.Join(tmpDir, country.Name, fmt.Sprintf("poly-%d.poly", i))
+    command := exec.Command(path.Join(pwd, "triangle"), filePath)
+    output, err := command.CombinedOutput()
+    if err != nil {
+      panic(fmt.Errorf("%s: %s", err, string(output)))
+    }
+  }
 }
 
 func main () {
@@ -179,6 +293,24 @@ func main () {
   }
 
   // Read data
-  // countries := make(chan Country)
-  ReadKML(kml, nil)
+  nr := NumCountries(kml)
+  countries := make(chan Country, nr)
+  var wg, wg2 sync.WaitGroup
+  wg.Add(1)
+  go func() {
+    ReadKML(kml, countries)
+    close(countries)
+    wg.Done()
+  }()
+  for c := range countries {
+    wg2.Add(1)
+    go func(country Country) {
+      WritePoly(country)
+      country.FindSuperset()
+      Triangulate(country)
+      wg2.Done()
+    }(c)
+  }
+  wg2.Wait()
+  wg.Wait()
 }
