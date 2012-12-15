@@ -69,12 +69,41 @@ type (
     Path string
   }
   Region struct {
-    OuterVertices, InnerVertices []Vertex
+    OuterVertices, InnerVertices VertexList
+    Triangles TriangleList
   }
   Vertex struct {
     X, Y float64
   }
+  Triangle struct {
+    T1, T2, T3 int
+  }
+  TriangleList []Triangle
+  VertexList []Vertex
+  Matcher interface {
+    Match(match []string, i int)
+    CreateList(n int)
+  }
 )
+
+func (t *TriangleList) CreateList(n int) {
+  *t = make(TriangleList, n)
+}
+
+func (v *VertexList) CreateList(n int) {
+  *v = make(VertexList, n)
+}
+
+func (t *TriangleList) Match(matches []string, i int) {
+  fmt.Sscanf(matches[1], "%d", &(*t)[i].T1)
+  fmt.Sscanf(matches[2], "%d", &(*t)[i].T2)
+  fmt.Sscanf(matches[3], "%d", &(*t)[i].T3)
+}
+
+func (v *VertexList) Match(matches []string, i int) {
+  fmt.Sscanf(matches[1], "%f", &(*v)[i].X)
+  fmt.Sscanf(matches[2], "%f", &(*v)[i].Y)
+}
 
 func OpenZip(fn string) (b []byte) {
   // Unzip the file.
@@ -279,35 +308,47 @@ func (c *Country) Triangulate() {
 func (c *Country) ReadTriangulated() {
   reg, _ := regexp.Compile(`[\d]+(.[\d]+)?`)
   for i, _ := range c.Regions {
+    // Determine the path to the current region files
     filePath := path.Join(c.Path, fmt.Sprintf("poly-%d.1", i))
+    // Open nodes first
     nodeFile, err := os.Open(filePath+".node")
     if err != nil {
       panic(err)
     }
     defer nodeFile.Close()
-    var n int
+
+    // Add data from a buffer reader, resetting untriangulated data already
+    // there.
     buf := bufio.NewReader(nodeFile)
-    line, err := buf.ReadString('\n')
+    ReadList(buf, &c.Regions[i].OuterVertices, reg)
+    edgeFile, err := os.Open(filePath+".ele")
     if err != nil {
-      panic(fmt.Errorf("Unexpected end of file"))
+      panic(err)
     }
-    fmt.Sscanf(line, "%d", &n)
-    c.Regions[i].OuterVertices = make([]Vertex, n)
-    c.Regions[i].InnerVertices = nil
-    for err != io.EOF {
-      line, err = buf.ReadString('\n')
-      if err != nil && err != io.EOF {
-        panic(err)
-      }
-      matches := reg.FindAllString(line, -1)
-      if len(matches) == 4 {
-        vertex := Vertex{}
-        index := -1
-        fmt.Sscanf(matches[0], "%d", &index)
-        fmt.Sscanf(matches[0], "%f", &vertex.X)
-        fmt.Sscanf(matches[1], "%f", &vertex.Y)
-        c.Regions[i].OuterVertices[index] = vertex
-      }
+    defer edgeFile.Close()
+    buf = bufio.NewReader(edgeFile)
+    ReadList(buf, &c.Regions[i].Triangles, reg)
+  }
+}
+
+func ReadList(buf *bufio.Reader, mt Matcher, reg *regexp.Regexp) {
+  line, err := buf.ReadString('\n')
+  if err != nil {
+    panic(fmt.Errorf("Unexpected end of file"))
+  }
+  var n int
+  fmt.Sscanf(line, "%d", &n)
+  mt.CreateList(n)
+  for err != io.EOF {
+    line, err = buf.ReadString('\n')
+    if err != nil && err != io.EOF {
+      panic(err)
+    }
+    matches := reg.FindAllString(line, -1)
+    if len(matches) == 4 {
+      index := -1
+      fmt.Sscanf(matches[0], "%d", &index)
+      mt.Match(matches, index)
     }
   }
 }
