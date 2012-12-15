@@ -18,6 +18,9 @@
 package main
 
 import (
+  "bufio"
+  "bytes"
+  "io"
   "archive/zip"
   "os"
   "os/exec"
@@ -33,6 +36,7 @@ import (
 
 var (
   pwd, tmpDir string
+  writingMutex sync.Mutex
 )
 
 type (
@@ -62,6 +66,7 @@ type (
   Country struct {
     Name string
     Regions []Region
+    Path string
   }
   Region struct {
     OuterVertices, InnerVertices []Vertex
@@ -128,7 +133,7 @@ func ReadKML(kml *xmlKML, countries chan Country) {
         // Extract inner and outer vertices from the string data representing
         // cleartext coordinates gathered from the XML data.
         for r, _ := range *polygons {
-          outer, inner := ExtractVertices(&(*polygons)[r])
+          outer, inner := (*polygons)[r].ExtractVertices()
           country.Regions[r].OuterVertices = outer
           country.Regions[r].InnerVertices = inner
         }
@@ -141,7 +146,7 @@ func ReadKML(kml *xmlKML, countries chan Country) {
   return
 }
 
-func ExtractVertices(p *xmlPolygon) ([]Vertex, []Vertex) {
+func (p *xmlPolygon) ExtractVertices() ([]Vertex, []Vertex) {
   reg, _ := regexp.Compile(`-??[\d]+(\.[\d]+)?,-??[\d]+\.([\d]+)?`)
   // Functionality for inner and outer boundaries is the same, so just
   // use a function.
@@ -159,13 +164,12 @@ func ExtractVertices(p *xmlPolygon) ([]Vertex, []Vertex) {
   return f(p.OuterBoundaryIs), f(p.InnerBoundaryIs)
 }
 
-func WritePoly (country Country) {
-  countryPath := path.Join(tmpDir, country.Name)
-  fmt.Printf("Writing %s\n", countryPath)
-  os.Mkdir(countryPath, 0755)
-  for i, region := range country.Regions {
-    polyFile, err := os.Create(path.Join(countryPath,
-                                         fmt.Sprintf("poly-%d.poly", i)))
+func (c *Country) WritePoly () {
+  c.Path = path.Join(tmpDir, c.Name)
+  fmt.Printf("Writing %s\n", c.Path)
+  os.Mkdir(c.Path, 0755)
+  for i, region := range c.Regions {
+    polyFile, err := os.Create(path.Join(c.Path,fmt.Sprintf("poly-%d.poly", i)))
     if err != nil {
       panic(err)
     }
@@ -244,23 +248,73 @@ func DetermineHole(vertices []Vertex) (Vertex) {
 }
 
 func (c *Country) FindSuperset() {
+  // Simple:
+  if len(c.Regions) > 1 {
+    max := 0
+    mark := -1
+    for i, _ := range c.Regions {
+      if max < len(c.Regions[i].OuterVertices) {
+        max = len(c.Regions[i].OuterVertices)
+        mark = i
+      }
+    }
+    if mark > -1 {
+      c.Regions = append(c.Regions[:mark], c.Regions[mark+1:]...)
+    }
+  }
 }
 
-func Triangulate(country Country) {
-  defer func() {
-    if r := recover(); r != nil {
-      fmt.Fprintf(os.Stderr, "Error: %s: %s\n", country.Name, r)
-    }
-  }()
-  fmt.Printf("Triangulating %s\n", country.Name)
-  for i, _ := range country.Regions {
-    filePath := path.Join(tmpDir, country.Name, fmt.Sprintf("poly-%d.poly", i))
+func (c *Country) Triangulate() {
+  fmt.Printf("Triangulating %s\n", c.Name)
+  for i, _ := range c.Regions {
+    filePath := path.Join(c.Path, fmt.Sprintf("poly-%d.poly", i))
     command := exec.Command(path.Join(pwd, "triangle"), filePath)
     output, err := command.CombinedOutput()
     if err != nil {
       panic(fmt.Errorf("%s: %s", err, string(output)))
     }
   }
+}
+
+func (c *Country) ReadTriangulated() {
+  reg, _ := regexp.Compile(`[\d]+(.[\d]+)?`)
+  for i, _ := range c.Regions {
+    filePath := path.Join(c.Path, fmt.Sprintf("poly-%d.1", i))
+    nodeFile, err := os.Open(filePath+".node")
+    if err != nil {
+      panic(err)
+    }
+    defer nodeFile.Close()
+    var n int
+    buf := bufio.NewReader(nodeFile)
+    line, err := buf.ReadString('\n')
+    if err != nil {
+      panic(fmt.Errorf("Unexpected end of file"))
+    }
+    fmt.Sscanf(line, "%d", &n)
+    c.Regions[i].OuterVertices = make([]Vertex, n)
+    c.Regions[i].InnerVertices = nil
+    for err != io.EOF {
+      line, err = buf.ReadString('\n')
+      if err != nil && err != io.EOF {
+        panic(err)
+      }
+      matches := reg.FindAllString(line, -1)
+      if len(matches) == 4 {
+        vertex := Vertex{}
+        index := -1
+        fmt.Sscanf(matches[0], "%d", &index)
+        fmt.Sscanf(matches[0], "%f", &vertex.X)
+        fmt.Sscanf(matches[1], "%f", &vertex.Y)
+        c.Regions[i].OuterVertices[index] = vertex
+      }
+    }
+  }
+}
+
+func (c *Country) WriteBytes(rw io.ReadWriter) {
+  writingMutex.Lock()
+  writingMutex.Unlock()
 }
 
 func main () {
@@ -277,8 +331,9 @@ func main () {
   // Determine paths
   pwd, _ = os.Getwd()
   tmpDir, _ = ioutil.TempDir("", "gompile")
-  inputFile := path.Clean(path.Join(pwd, path.Base(os.Args[1])))
   os.Chdir(tmpDir)
+  // Determine input path
+  inputFile := path.Clean(path.Join(pwd, path.Base(os.Args[1])))
 
   // Unzip
   fmt.Printf("Unzipping %s\n", inputFile)
@@ -302,12 +357,20 @@ func main () {
     close(countries)
     wg.Done()
   }()
+  buf := new(bytes.Buffer)
   for c := range countries {
     wg2.Add(1)
     go func(country Country) {
-      WritePoly(country)
-      country.FindSuperset()
-      Triangulate(country)
+      defer func(c Country) {
+        if r := recover(); r != nil {
+          fmt.Fprintf(os.Stderr, "Error in %s: %s\n", c.Name, r)
+        }
+      }(c)
+      // country.FindSuperset()
+      country.WritePoly()
+      country.Triangulate()
+      country.ReadTriangulated()
+      country.WriteBytes(buf)
       wg2.Done()
     }(c)
   }
