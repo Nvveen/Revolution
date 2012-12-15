@@ -42,7 +42,7 @@ class Drawable {
   private:
     Shader *_shader;
     std::vector<Polygon> _polygons;
-    unsigned int _numTriangles;
+    unsigned long _numTriangles;
     glm::vec4 _primaryColor;
 
     GLuint _vao, _vbo, _ibo;

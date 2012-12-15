@@ -324,7 +324,7 @@ func (c *Country) Triangulate() {
 // ReadTriangulated reads the triangulated poly/ele/node files and creates
 // new vertex/triangle lists for the designated countries.
 func (c *Country) ReadTriangulated() {
-  reg, _ := regexp.Compile(`[\d]+(.[\d]+)?`)
+  reg, _ := regexp.Compile(`-??[\d]+(.[\d]+)?`)
   for i, _ := range c.Regions {
     // Determine the path to the current region files
     filePath := path.Join(c.Path, fmt.Sprintf("poly-%d.1", i))
@@ -374,6 +374,17 @@ func ReadList(buf *bufio.Reader, mt Matcher, reg *regexp.Regexp) {
   }
 }
 
+// WriteData opens a file and writes all country data to the file.
+func WriteData(outputPath string, countries chan Country, numCountries int) {
+  output, err := os.Create(outputPath)
+  if err != nil {
+    panic(err)
+  }
+  defer output.Close()
+  binary.Write(output, binary.LittleEndian, uint16(numCountries))
+  ConvertCountries(output, countries)
+}
+
 // Write everything into the ReadWriter as binary data.
 func (c *Country) WriteBytes(rw io.ReadWriter) {
   writingMutex.Lock()
@@ -382,25 +393,48 @@ func (c *Country) WriteBytes(rw io.ReadWriter) {
   // Untermined country name.
   rw.Write([]byte(c.Name))
   // Number of countries.
-  binary.Write(rw, binary.LittleEndian, byte(len(c.Regions)))
+  binary.Write(rw, binary.LittleEndian, uint16(len(c.Regions)))
   for _, region := range c.Regions {
     // For each country, write length of the outer-vertices. (Inner vertices
     // are now contained in outer-vertices as per the Triangle program run.
-    binary.Write(rw, binary.LittleEndian, int32(len(region.OuterVertices)))
+    binary.Write(rw, binary.LittleEndian, uint32(len(region.OuterVertices)))
     for _, vertex := range region.OuterVertices {
-      binary.Write(rw, binary.LittleEndian, vertex.X)
-      binary.Write(rw, binary.LittleEndian, vertex.Y)
+      binary.Write(rw, binary.LittleEndian, float64(vertex.X))
+      binary.Write(rw, binary.LittleEndian, float64(vertex.Y))
     }
     // Write the actual triagles as indices.
-    binary.Write(rw, binary.LittleEndian, int32(len(region.Triangles)))
+    binary.Write(rw, binary.LittleEndian, uint32(len(region.Triangles)))
     for _, triangle := range region.Triangles {
-      binary.Write(rw, binary.LittleEndian, int32(triangle.T1))
-      binary.Write(rw, binary.LittleEndian, int32(triangle.T2))
-      binary.Write(rw, binary.LittleEndian, int32(triangle.T3))
+      binary.Write(rw, binary.LittleEndian, uint32(triangle.T1))
+      binary.Write(rw, binary.LittleEndian, uint32(triangle.T2))
+      binary.Write(rw, binary.LittleEndian, uint32(triangle.T3))
     }
   }
   // Unlock the ReadWriter for writing.
   writingMutex.Unlock()
+}
+
+// ConvertCountries takes a channel of countries and rewrites and
+// triangles the data to form new data.
+func ConvertCountries(output io.ReadWriter, countries chan Country) {
+  var wg sync.WaitGroup
+  for c := range countries {
+    wg.Add(1)
+    go func(country Country) {
+      defer func(c Country) {
+        if r := recover(); r != nil {
+          fmt.Fprintf(os.Stderr, "Error in %s: %s\n", c.Name, r)
+        }
+      }(c)
+      // country.FindSuperset()
+      country.WritePoly()
+      country.Triangulate()
+      country.ReadTriangulated()
+      country.WriteBytes(output)
+      wg.Done()
+    }(c)
+  }
+  wg.Wait()
 }
 
 func main () {
@@ -444,33 +478,6 @@ func main () {
     close(countries)
     wg.Done()
   }()
-  output, err := os.Create(path.Join(pwd, "out.dat"))
-  if err != nil {
-    panic(err)
-  }
-  defer output.Close()
-  binary.Write(output, binary.LittleEndian, byte(nr))
-  ConvertCountries(output, countries)
-  wg.Wait()
-}
-
-func ConvertCountries(output io.ReadWriter, countries chan Country) {
-  var wg sync.WaitGroup
-  for c := range countries {
-    wg.Add(1)
-    go func(country Country) {
-      defer func(c Country) {
-        if r := recover(); r != nil {
-          fmt.Fprintf(os.Stderr, "Error in %s: %s\n", c.Name, r)
-        }
-      }(c)
-      // country.FindSuperset()
-      country.WritePoly()
-      country.Triangulate()
-      country.ReadTriangulated()
-      country.WriteBytes(output)
-      wg.Done()
-    }(c)
-  }
+  WriteData(path.Join(pwd, "out.dat"), countries, nr)
   wg.Wait()
 }

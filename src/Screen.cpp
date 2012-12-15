@@ -121,7 +121,8 @@ void Screen::injectInput() {
         if (_lookAround) {
           _world->getCamera().look(_mouseRef[0], _mouseRef[1], e.motion.x,
               e.motion.y);
-          SDL_WarpMouse(_mouseRef[0], _mouseRef[1]);
+          SDL_WarpMouse((unsigned short)(_mouseRef[0]),
+                        (unsigned short)(_mouseRef[1]));
         }
         break;
       case SDL_MOUSEBUTTONDOWN:
@@ -238,7 +239,7 @@ void Screen::handleMouseDown( Uint8 button, const int & x, const int & y ) {
       CEGUI::System::getSingleton().injectMouseButtonDown(CEGUI::RightButton);
 #endif
       _lookAround = true;
-      _mouseRef[0] = x; _mouseRef[1] = y;
+      _mouseRef[0] = float(x); _mouseRef[1] = float(y);
       SDL_ShowCursor(SDL_DISABLE);
       break;
     case SDL_BUTTON_WHEELDOWN:
@@ -301,19 +302,19 @@ void Screen::executeInput( const SDLKey & key ) {
   switch (key) {
     case SDLK_UP:
     case SDLK_w:
-      _world->getCamera().move(0.0f, -1.0f);
+      _world->getCamera().move(0.0f, -5.0f);
       break;
     case SDLK_DOWN:
     case SDLK_s:
-      _world->getCamera().move(0.0f, 1.0f);
+      _world->getCamera().move(0.0f, 5.0f);
       break;
     case SDLK_LEFT:
     case SDLK_a:
-      _world->getCamera().move(-1.0f, 0.0f);
+      _world->getCamera().move(-5.0f, 0.0f);
       break;
     case SDLK_RIGHT:
     case SDLK_d:
-      _world->getCamera().move(1.0f, 0.0f);
+      _world->getCamera().move(5.0f, 0.0f);
       break;
     default:
       break;

@@ -56,7 +56,7 @@ void World::init ()
     Drawable *d = new Drawable(_shader, randomColor);
     unsigned short nameLength, numPolygons;
     std::vector<Polygon> polygons;
-    file.read(reinterpret_cast<char *>(&nameLength), sizeof(unsigned short));
+    file.read(reinterpret_cast<char *>(&nameLength), sizeof(unsigned char));
     char *name = new char[nameLength+1];
     file.read(reinterpret_cast<char *>(&name[0]), nameLength);
     name[nameLength] = '\0';
@@ -69,7 +69,7 @@ void World::init ()
         double x, y;
         file.read(reinterpret_cast<char *>(&x), sizeof(double));
         file.read(reinterpret_cast<char *>(&y), sizeof(double));
-        polygons.back().vertices.push_back(Vec3(x, -10, y));
+        polygons.back().vertices.push_back(Vec3(x/100, -10, y/100));
       }
       file.read(reinterpret_cast<char *>(&numEdges), sizeof(unsigned int));
       for (unsigned int k = 0; k < numEdges; k++) {
@@ -89,7 +89,9 @@ void World::init ()
 
 void World::draw()
 {
+  int i = 0;
   for (auto p : _drawables) {
     p->draw(_cam);
+    i++;
   }
 }

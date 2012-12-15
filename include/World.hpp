@@ -33,6 +33,7 @@ class World {
   private:
     Shader *_shader;
     Camera *_cam;
+    int _show = 0;
     std::vector<Drawable *> _drawables;
     
     void init ();
