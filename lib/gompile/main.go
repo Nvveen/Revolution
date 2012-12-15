@@ -35,7 +35,7 @@ import (
 )
 
 var (
-  pwd, tmpDir string
+  tmpDir, execPath string
   writingMutex sync.Mutex
 )
 
@@ -63,6 +63,7 @@ type (
     }
   }
 
+  // Country-struct
   Country struct {
     Name string
     Regions []Region
@@ -78,28 +79,34 @@ type (
   Triangle struct {
     T1, T2, T3 int
   }
+
   TriangleList []Triangle
   VertexList []Vertex
+
   Matcher interface {
     Match(match []string, i int)
     CreateList(n int)
   }
 )
 
+// (Re)set the triangle list
 func (t *TriangleList) CreateList(n int) {
   *t = make(TriangleList, n)
 }
 
+// (Re)set the vertex list
 func (v *VertexList) CreateList(n int) {
   *v = make(VertexList, n)
 }
 
+// Match a string-list to scan it into the Triangle list
 func (t *TriangleList) Match(matches []string, i int) {
   fmt.Sscanf(matches[1], "%d", &(*t)[i].T1)
   fmt.Sscanf(matches[2], "%d", &(*t)[i].T2)
   fmt.Sscanf(matches[3], "%d", &(*t)[i].T3)
 }
 
+// Match a string list to scan it into the Vertex list
 func (v *VertexList) Match(matches []string, i int) {
   fmt.Sscanf(matches[1], "%f", &(*v)[i].X)
   fmt.Sscanf(matches[2], "%f", &(*v)[i].Y)
@@ -132,6 +139,7 @@ func OpenZip(fn string) (b []byte) {
   return b
 }
 
+// NumCountries counts the number of countries.
 func NumCountries(kml *xmlKML) (int) {
   nr := 0
   for i, _ := range kml.Document.Folders {
@@ -142,6 +150,8 @@ func NumCountries(kml *xmlKML) (int) {
   return nr
 }
 
+// ReadKML reads from a struct into a channel of countries, so we can
+// concurrently process each country.
 func ReadKML(kml *xmlKML, countries chan Country) {
   var wg sync.WaitGroup
   for i, folder := range kml.Document.Folders {
@@ -175,16 +185,19 @@ func ReadKML(kml *xmlKML, countries chan Country) {
   return
 }
 
-func (p *xmlPolygon) ExtractVertices() ([]Vertex, []Vertex) {
+// ExtractVertices takes a polygon, and matches the string data of the 
+// coordinates and scans them into two VertexLists.
+func (p *xmlPolygon) ExtractVertices() (VertexList, VertexList) {
   reg, _ := regexp.Compile(`-??[\d]+(\.[\d]+)?,-??[\d]+\.([\d]+)?`)
   // Functionality for inner and outer boundaries is the same, so just
   // use a function.
-  f := func(boundary xmlBoundaryIs) []Vertex {
+  f := func(boundary xmlBoundaryIs) VertexList {
     vertData := boundary.LinearRing.Coordinates
     // Find all matches.
     matches := reg.FindAllString(vertData, -1)
     // Scan each match into a vertex, and add it to the list.
-    verts := make([]Vertex, len(matches))
+    var verts VertexList
+    verts.CreateList(len(matches))
     for i, match := range matches {
       fmt.Sscanf(match, "%f,%f", &verts[i].X, &verts[i].Y)
     }
@@ -193,16 +206,20 @@ func (p *xmlPolygon) ExtractVertices() ([]Vertex, []Vertex) {
   return f(p.OuterBoundaryIs), f(p.InnerBoundaryIs)
 }
 
+// WritePoly writes country data in the .poly format needed by Triangle.
 func (c *Country) WritePoly () {
+  // First create a temporary directory.
   c.Path = path.Join(tmpDir, c.Name)
   fmt.Printf("Writing %s\n", c.Path)
   os.Mkdir(c.Path, 0755)
+  // For each region, write a file.
   for i, region := range c.Regions {
     polyFile, err := os.Create(path.Join(c.Path,fmt.Sprintf("poly-%d.poly", i)))
     if err != nil {
       panic(err)
     }
 
+    // For the specification of a poly-file, see the Triangle website.
     size := len(region.OuterVertices) + len(region.InnerVertices)
     polyFile.WriteString(fmt.Sprintf("%d 2 0 0\n", size))
     writeVertices := func(vertices []Vertex, offset int) {
@@ -221,12 +238,14 @@ func (c *Country) WritePoly () {
                                          endpoint))
       }
     }
+    // Vertices and edges (segments) are written to the same file.
     writeVertices(region.OuterVertices, 0)
     writeVertices(region.InnerVertices, len(region.OuterVertices))
     polyFile.WriteString(fmt.Sprintf("%d\n", size))
     writeEdges(region.OuterVertices, 0)
     writeEdges(region.InnerVertices, len(region.OuterVertices))
 
+    // Find the holes.
     if len(region.InnerVertices) > 0 {
       polyFile.WriteString("1\n")
       v := DetermineHole(region.InnerVertices)
@@ -239,7 +258,11 @@ func (c *Country) WritePoly () {
   }
 }
 
-func DetermineHole(vertices []Vertex) (Vertex) {
+// DetermineHole uses an inefficient random-point generation to find a point
+// inside the inner vertices to determine as a hole, so Triangle skips
+// this in triangulation.
+func DetermineHole(vertices VertexList) (Vertex) {
+  // For minimum efficiency, find a minimum spanning box of the polygon.
   min := vertices[0]
   max := vertices[0]
   for _, v := range vertices {
@@ -256,11 +279,15 @@ func DetermineHole(vertices []Vertex) (Vertex) {
       max.Y = v.Y
     }
   }
+  // Keep generating random points until one has been found that is inside
+  // the polygon.
   var x, y float64
   for {
+    // Generate a random point.
     x, y = rand.Float64(), rand.Float64()
     x = (x * math.Abs(max.X-min.X)) + min.X
     y = (y * math.Abs(max.Y-min.Y)) + min.Y
+    // Next is an algorithm that determines if the point is inside.
     pip := false
     for i, j := 0, len(vertices)-1; i < len(vertices); j, i = i, i+1 {
       if ((vertices[i].Y > y) != (vertices[j].Y > y) &&
@@ -276,28 +303,17 @@ func DetermineHole(vertices []Vertex) (Vertex) {
   return Vertex{x, y}
 }
 
+// FindSuperset is a function that removes the superset of all regions
+// that is included in most countries that are divided into regions.
 func (c *Country) FindSuperset() {
-  // Simple:
-  if len(c.Regions) > 1 {
-    max := 0
-    mark := -1
-    for i, _ := range c.Regions {
-      if max < len(c.Regions[i].OuterVertices) {
-        max = len(c.Regions[i].OuterVertices)
-        mark = i
-      }
-    }
-    if mark > -1 {
-      c.Regions = append(c.Regions[:mark], c.Regions[mark+1:]...)
-    }
-  }
 }
 
+// Triangulate calls the Triangle program on the generated poly file.
 func (c *Country) Triangulate() {
   fmt.Printf("Triangulating %s\n", c.Name)
   for i, _ := range c.Regions {
     filePath := path.Join(c.Path, fmt.Sprintf("poly-%d.poly", i))
-    command := exec.Command(path.Join(pwd, "triangle"), filePath)
+    command := exec.Command(path.Join(execPath, "triangle"), filePath)
     output, err := command.CombinedOutput()
     if err != nil {
       panic(fmt.Errorf("%s: %s", err, string(output)))
@@ -305,6 +321,8 @@ func (c *Country) Triangulate() {
   }
 }
 
+// ReadTriangulated reads the triangulated poly/ele/node files and creates
+// new vertex/triangle lists for the designated countries.
 func (c *Country) ReadTriangulated() {
   reg, _ := regexp.Compile(`[\d]+(.[\d]+)?`)
   for i, _ := range c.Regions {
@@ -331,6 +349,7 @@ func (c *Country) ReadTriangulated() {
   }
 }
 
+// ReadList takes a Matcher list, that is then read and scanned for data.
 func ReadList(buf *bufio.Reader, mt Matcher, reg *regexp.Regexp) {
   line, err := buf.ReadString('\n')
   if err != nil {
@@ -338,7 +357,9 @@ func ReadList(buf *bufio.Reader, mt Matcher, reg *regexp.Regexp) {
   }
   var n int
   fmt.Sscanf(line, "%d", &n)
+  // Reset the list.
   mt.CreateList(n)
+  // Matches all lines and scan in.
   for err != io.EOF {
     line, err = buf.ReadString('\n')
     if err != nil && err != io.EOF {
@@ -353,17 +374,24 @@ func ReadList(buf *bufio.Reader, mt Matcher, reg *regexp.Regexp) {
   }
 }
 
+// Write everything into the ReadWriter as binary data.
 func (c *Country) WriteBytes(rw io.ReadWriter) {
   writingMutex.Lock()
+  // Name length
   binary.Write(rw, binary.LittleEndian, byte(len(c.Name)))
+  // Untermined country name.
   rw.Write([]byte(c.Name))
+  // Number of countries.
   binary.Write(rw, binary.LittleEndian, byte(len(c.Regions)))
   for _, region := range c.Regions {
+    // For each country, write length of the outer-vertices. (Inner vertices
+    // are now contained in outer-vertices as per the Triangle program run.
     binary.Write(rw, binary.LittleEndian, int32(len(region.OuterVertices)))
     for _, vertex := range region.OuterVertices {
       binary.Write(rw, binary.LittleEndian, vertex.X)
       binary.Write(rw, binary.LittleEndian, vertex.Y)
     }
+    // Write the actual triagles as indices.
     binary.Write(rw, binary.LittleEndian, int32(len(region.Triangles)))
     for _, triangle := range region.Triangles {
       binary.Write(rw, binary.LittleEndian, int32(triangle.T1))
@@ -371,6 +399,7 @@ func (c *Country) WriteBytes(rw io.ReadWriter) {
       binary.Write(rw, binary.LittleEndian, int32(triangle.T3))
     }
   }
+  // Unlock the ReadWriter for writing.
   writingMutex.Unlock()
 }
 
@@ -386,11 +415,12 @@ func main () {
     panic(fmt.Errorf("Not enough arguments to commandline\n"))
   }
   // Determine paths
-  pwd, _ = os.Getwd()
+  pwd, _ := os.Getwd()
   tmpDir, _ = ioutil.TempDir("", "gompile")
   os.Chdir(tmpDir)
   // Determine input path
-  inputFile := path.Clean(path.Join(pwd, path.Base(os.Args[1])))
+  inputFile := path.Clean(path.Join(pwd, os.Args[1]))
+  execPath = path.Join(pwd, path.Dir(os.Args[0]))
 
   // Unzip
   fmt.Printf("Unzipping %s\n", inputFile)
@@ -407,7 +437,7 @@ func main () {
   // Read data
   nr := NumCountries(kml)
   countries := make(chan Country, nr)
-  var wg, wg2 sync.WaitGroup
+  var wg sync.WaitGroup
   wg.Add(1)
   go func() {
     ReadKML(kml, countries)
@@ -420,8 +450,14 @@ func main () {
   }
   defer output.Close()
   binary.Write(output, binary.LittleEndian, byte(nr))
+  ConvertCountries(output, countries)
+  wg.Wait()
+}
+
+func ConvertCountries(output io.ReadWriter, countries chan Country) {
+  var wg sync.WaitGroup
   for c := range countries {
-    wg2.Add(1)
+    wg.Add(1)
     go func(country Country) {
       defer func(c Country) {
         if r := recover(); r != nil {
@@ -433,9 +469,8 @@ func main () {
       country.Triangulate()
       country.ReadTriangulated()
       country.WriteBytes(output)
-      wg2.Done()
+      wg.Done()
     }(c)
   }
-  wg2.Wait()
   wg.Wait()
 }
