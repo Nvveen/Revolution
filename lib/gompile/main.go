@@ -19,7 +19,7 @@ package main
 
 import (
   "bufio"
-  "bytes"
+  "encoding/binary"
   "io"
   "archive/zip"
   "os"
@@ -355,6 +355,22 @@ func ReadList(buf *bufio.Reader, mt Matcher, reg *regexp.Regexp) {
 
 func (c *Country) WriteBytes(rw io.ReadWriter) {
   writingMutex.Lock()
+  binary.Write(rw, binary.LittleEndian, byte(len(c.Name)))
+  rw.Write([]byte(c.Name))
+  binary.Write(rw, binary.LittleEndian, byte(len(c.Regions)))
+  for _, region := range c.Regions {
+    binary.Write(rw, binary.LittleEndian, int32(len(region.OuterVertices)))
+    for _, vertex := range region.OuterVertices {
+      binary.Write(rw, binary.LittleEndian, vertex.X)
+      binary.Write(rw, binary.LittleEndian, vertex.Y)
+    }
+    binary.Write(rw, binary.LittleEndian, int32(len(region.Triangles)))
+    for _, triangle := range region.Triangles {
+      binary.Write(rw, binary.LittleEndian, int32(triangle.T1))
+      binary.Write(rw, binary.LittleEndian, int32(triangle.T2))
+      binary.Write(rw, binary.LittleEndian, int32(triangle.T3))
+    }
+  }
   writingMutex.Unlock()
 }
 
@@ -398,7 +414,12 @@ func main () {
     close(countries)
     wg.Done()
   }()
-  buf := new(bytes.Buffer)
+  output, err := os.Create(path.Join(pwd, "out.dat"))
+  if err != nil {
+    panic(err)
+  }
+  defer output.Close()
+  binary.Write(output, binary.LittleEndian, byte(nr))
   for c := range countries {
     wg2.Add(1)
     go func(country Country) {
@@ -411,7 +432,7 @@ func main () {
       country.WritePoly()
       country.Triangulate()
       country.ReadTriangulated()
-      country.WriteBytes(buf)
+      country.WriteBytes(output)
       wg2.Done()
     }(c)
   }
