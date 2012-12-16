@@ -69,7 +69,7 @@ void World::init ()
         double x, y;
         file.read(reinterpret_cast<char *>(&x), sizeof(double));
         file.read(reinterpret_cast<char *>(&y), sizeof(double));
-        polygons.back().vertices.push_back(Vec3(x/100, -10, y/100));
+        polygons.back().vertices.push_back(Vec3(x, -10, y));
       }
       file.read(reinterpret_cast<char *>(&numEdges), sizeof(unsigned int));
       for (unsigned int k = 0; k < numEdges; k++) {

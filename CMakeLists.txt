@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 project(revolution)
 
 set(CMAKE_CXX_FLAGS "-std=c++0x -W")
-set(CMAKE_CXX_FLAGS_DEBUG "-g -Werror -Wall -Wfatal-errors -Wconversion -DDEBUG -DNOCEGUI")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -Werror -Wall -Wfatal-errors -DDEBUG -DNOCEGUI")
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/Modules")
 set(INSTALL_DIR "${PROJECT_SOURCE_DIR}/bin")
 set(LIB_DIR "${PROJECT_SOURCE_DIR}/lib")
