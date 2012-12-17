@@ -33,7 +33,8 @@ class Drawable {
     Drawable ( Shader * const shader, glm::vec4 const & primary );
     virtual ~Drawable ();
 
-    void addPolygons ( std::vector<Polygon> const & polygons );
+    void addPolygon ( std::vector<Vec3> const & vertData,
+                      std::vector<IVec3> const & indData );
 
     void draw ( Camera * const cam );
 
@@ -47,13 +48,21 @@ class Drawable {
 
     GLuint _vao, _vbo, _ibo;
     glm::mat4 _model;
-
-    void init ();
 };
 
-struct Polygon {
-  std::vector<Vec3> vertices;
-  std::vector<IVec3> indices;
+class Polygon {
+  public:
+    Polygon ();
+    virtual ~Polygon() {}
+
+    void addData ( std::vector<Vec3> const & vertData,
+                   std::vector<IVec3> const & indData );
+    void draw ();
+  private:
+    std::vector<Vec3> vertices;
+    std::vector<IVec3> indices;
+
+    GLuint _vao, _vbo, _ibo;
 };
 
 #endif

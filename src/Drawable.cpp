@@ -22,24 +22,10 @@ Drawable::Drawable ()
 Drawable::Drawable ( Shader * const shader, glm::vec4 const & primary ) : 
   _shader(shader), _primaryColor(primary), _model(glm::mat4(1.0))
 {
-  this->init();
 }
 
 Drawable::~Drawable ()
 {
-}
-
-void Drawable::init ()
-{
-  glGenVertexArrays(1, &_vao);
-  glBindVertexArray(_vao);
-  glEnableVertexAttribArray(0);
-
-  glGenBuffers(1, &_vbo);
-  glGenBuffers(1, &_ibo);
-
-  glDisableVertexAttribArray(0);
-  glBindVertexArray(0);
 }
 
 void Drawable::draw ( Camera * const cam )
@@ -49,53 +35,61 @@ void Drawable::draw ( Camera * const cam )
   _shader->setUniform("vMVP", mvp);
   _shader->setUniform("objectColor", _primaryColor);
 
-  glBindVertexArray(_vao);
-  glEnableVertexAttribArray(0);
+  for (auto polygon : _polygons) {
+    polygon.draw();
+  }
 
-  glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo);
-  glDrawElements(GL_TRIANGLES, GLint(_numTriangles), GL_UNSIGNED_INT, (void *)0);
-
-  glDisableVertexAttribArray(0);
-  glBindVertexArray(0);
   _shader->unbind();
 }
 
-void Drawable::addPolygons ( std::vector<Polygon> const & polygons )
+void Drawable::addPolygon ( std::vector<Vec3> const & vertData,
+                             std::vector<IVec3> const & indData )
 {
-  // Determine size of buffers
-  unsigned long vboSize = 0, iboSize = 0;
-  for ( auto poly : polygons ) {
-    vboSize += poly.vertices.size();
-    iboSize += poly.indices.size();
-  }
+  _polygons.push_back(Polygon());
+  _polygons.back().addData(vertData, indData);
+}
+
+Polygon::Polygon ()
+{
+}
+
+void Polygon::addData ( std::vector<Vec3> const & vertData,
+                        std::vector<IVec3> const & indData )
+{
+  vertices = vertData;
+  indices = indData;
+
+  glGenVertexArrays(1, &_vao);
   glBindVertexArray(_vao);
   glEnableVertexAttribArray(0);
+
+  glGenBuffers(1, &_vbo);
+  glGenBuffers(1, &_ibo);
+
   glBindBuffer(GL_ARRAY_BUFFER, _vbo);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo);
-  // Prepare buffers
-  glBufferData(GL_ARRAY_BUFFER, sizeof(GLdouble)*vboSize*3, NULL,
-               GL_DYNAMIC_DRAW);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*iboSize*3, NULL,
-               GL_DYNAMIC_DRAW);
-  // Write data to buffers in parts
-  unsigned long vboOffset = 0, iboOffset = 0;
-  _numTriangles = 0;
-  for (auto poly : polygons) {
-    glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLdouble)*vboOffset*3,
-                    sizeof(GLdouble)*poly.vertices.size()*3, &poly.vertices[0]);
-    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*iboOffset*3,
-                    sizeof(GLuint)*poly.indices.size()*3, &poly.indices[0]);
-    vboOffset += poly.vertices.size();
-    iboOffset += poly.indices.size();
-    _numTriangles += poly.indices.size()*3;
-    _polygons.push_back(poly);
-  }
+  glBufferData(GL_ARRAY_BUFFER, sizeof(GLdouble)*vertices.size()*3,
+      &vertices[0], GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*indices.size()*3,
+      &indices[0], GL_STATIC_DRAW);
+
   glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, sizeof(GLdouble)*3,
       (void *)0);
 
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glDisableVertexAttribArray(0);
+  glBindVertexArray(0);
+}
+
+void Polygon::draw ()
+{
+  glBindVertexArray(_vao);
+  glEnableVertexAttribArray(0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, _vbo);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo);
+  glDrawElements(GL_TRIANGLES, GLint(indices.size())*3, GL_UNSIGNED_INT,
+      (void *)0);
+
   glDisableVertexAttribArray(0);
   glBindVertexArray(0);
 }

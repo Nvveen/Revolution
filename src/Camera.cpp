@@ -21,8 +21,10 @@ Camera::Camera (const unsigned int & width, const unsigned int & height) {
   _ratio = float(width)/float(height);
 
   _horizontalAngle = float(M_PI);
-  _verticalAngle = 45.0f;
-  _pos = glm::vec3(0, 5, 5);
+  _verticalAngle = 45.6f;
+  _pos = glm::vec3(0, -50, 50);
+  getView();
+  getProjection();
 }
 
 void Camera::move( const float & deltaX, const float & deltaY ) {
@@ -33,8 +35,9 @@ void Camera::move( const float & deltaX, const float & deltaY ) {
 void Camera::look( const float & refX, const float & refY, const float & i,
     const float & j ) {
   float mouseSpeed = 0.005f;
-  _horizontalAngle += mouseSpeed * (refX-i);
+  _horizontalAngle -= mouseSpeed * (refX-i);
   _verticalAngle += mouseSpeed * (refY-j);
+  std::cout << _horizontalAngle << " by " << _verticalAngle << std::endl;
 }
 
 void Camera::zoom ( float const & val )
@@ -45,7 +48,7 @@ void Camera::zoom ( float const & val )
 
 glm::mat4 Camera::getProjection() {
   float fov = _initialFoV;
-  return glm::perspective(fov, _ratio, 0.1f, 100.0f);
+  return glm::perspective(fov, _ratio, 0.1f, 1000.0f);
 }
 
 glm::mat4 Camera::getView() {

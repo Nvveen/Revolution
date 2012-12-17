@@ -63,7 +63,11 @@ void World::init ()
     std::string pathName = "share/countries/" + name + "/";
     using namespace boost::filesystem;
     path p(pathName);
-    glm::vec4 randomColor = glm::vec4(glm::vecRand3(0.0f, 1.0f), 1.0f);
+    glm::vec4 randomColor(0.0f);
+    while (randomColor[0] < 0.1f && randomColor[1] < 0.1f &&
+        randomColor[2] < 0.1f) {
+      randomColor = glm::vec4(glm::vecRand3(0.0f, 1.0f), 1.0f);
+    }
     Drawable *country = new Drawable(_shader, randomColor);
     country->name = name;
     try {
@@ -71,7 +75,6 @@ void World::init ()
         if(is_directory(p)) {
           directory_iterator it(p), end_it;
           // Iterate over each file in each directory, a polygon.
-          std::vector<Polygon> polygons;
           for (; it != end_it; ++it) {
             std::ifstream regionFile(it->path().string());
             std::string name;
@@ -81,8 +84,9 @@ void World::init ()
             int vertSize = 0, triangleSize = 0;
             regionFile >> vertSize >> triangleSize;
             regionFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            polygons.push_back(Polygon());
             regionFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::vector<Vec3> vert;
+            std::vector<IVec3> ind;
             for (int i = 0; i < vertSize; i++) {
               std::string str;
               getline(regionFile, str);
@@ -92,11 +96,10 @@ void World::init ()
               Vec3 vec;
               getline(line, str, ',');
               std::stringstream(str) >> vec[0];
-              vec[0] = -vec[0];
               getline(line, str);
               std::stringstream(str) >> vec[2];
               vec[1] = -10;
-              polygons.back().vertices.push_back(vec);
+              vert.push_back(vec);
             }
             regionFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             for (int i = 0; i < triangleSize; i++) {
@@ -110,10 +113,10 @@ void World::init ()
               std::stringstream(str) >> vec[1];
               getline(line, str);
               std::stringstream(str) >> vec[2];
-              polygons.back().indices.push_back(vec);
+              ind.push_back(vec);
             }
+            country->addPolygon(vert, ind);
           }
-          country->addPolygons(polygons);
         }
       } else {
         std::cerr << pathName << " does not exist." << std::endl;
