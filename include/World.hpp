@@ -29,11 +29,15 @@ class World {
 
     void draw ();
     Camera & getCamera();
+
+    void showMore();
+    void showLess();
   protected:
   private:
     Shader *_shader;
     Camera *_cam;
     int _show = 0;
+    int _maxDrawable = 0;
     std::vector<Drawable *> _drawables;
     
     void init ();
@@ -42,6 +46,16 @@ class World {
 inline Camera & World::getCamera ()
 {
   return *(this->_cam);
+}
+
+inline void World::showMore() {
+  _maxDrawable++;
+  std::cout << "Showing " << _maxDrawable << std::endl;
+}
+
+inline void World::showLess() {
+  _maxDrawable--;
+  std::cout << "Showing " << _maxDrawable << std::endl;
 }
 
 #endif

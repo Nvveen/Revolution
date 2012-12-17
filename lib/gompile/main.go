@@ -19,7 +19,6 @@ package main
 
 import (
   "bufio"
-  "encoding/binary"
   "io"
   "archive/zip"
   "os"
@@ -35,7 +34,7 @@ import (
 )
 
 var (
-  tmpDir, execPath string
+  tmpDir, execPath, outputPath string
   writingMutex sync.Mutex
 )
 
@@ -374,49 +373,60 @@ func ReadList(buf *bufio.Reader, mt Matcher, reg *regexp.Regexp) {
   }
 }
 
-// WriteData opens a file and writes all country data to the file.
-func WriteData(outputPath string, countries chan Country, numCountries int) {
-  output, err := os.Create(outputPath)
+func (c *Country) WriteBack() {
+  countryPath := path.Join(outputPath, c.Name)
+  err := os.Mkdir(countryPath, 0755)
   if err != nil {
     panic(err)
   }
-  defer output.Close()
-  binary.Write(output, binary.LittleEndian, uint16(numCountries))
-  ConvertCountries(output, countries)
+
+  for i, region := range c.Regions {
+    output, err := os.Create(path.Join(countryPath, fmt.Sprintf("reg-%d", i)))
+    if err != nil {
+      panic(err)
+    }
+
+    output.WriteString(fmt.Sprintf("# %s region %d\n", c.Name, i))
+    output.WriteString(fmt.Sprintf("%d %d\n", len(region.OuterVertices),
+      len(region.Triangles)))
+    output.WriteString("# Outer Vertices\n")
+    for _, vertex := range region.OuterVertices {
+      output.WriteString(fmt.Sprintf("%f,%f\n", vertex.X, vertex.Y))
+    }
+    output.WriteString("# Triangles\n")
+    for _, triangle := range region.Triangles {
+      output.WriteString(fmt.Sprintf("%d,%d,%d\n", triangle.T1, triangle.T2,
+        triangle.T3))
+    }
+
+    output.Close()
+  }
+
+  writingMutex.Lock()
+  fileList, err := os.OpenFile(path.Join(outputPath, "countrylist"),
+    os.O_RDWR | os.O_APPEND, 0666)
+  if err != nil {
+    fileList, err = os.Create(path.Join(outputPath, "countrylist"))
+  }
+  if err != nil {
+    panic(err)
+  }
+  fileList.WriteString(c.Name + "\n")
+  fileList.Close()
+  writingMutex.Unlock()
 }
 
-// Write everything into the ReadWriter as binary data.
-func (c *Country) WriteBytes(rw io.ReadWriter) {
-  writingMutex.Lock()
-  // Name length
-  binary.Write(rw, binary.LittleEndian, byte(len(c.Name)))
-  // Untermined country name.
-  rw.Write([]byte(c.Name))
-  // Number of countries.
-  binary.Write(rw, binary.LittleEndian, uint16(len(c.Regions)))
-  for _, region := range c.Regions {
-    // For each country, write length of the outer-vertices. (Inner vertices
-    // are now contained in outer-vertices as per the Triangle program run.
-    binary.Write(rw, binary.LittleEndian, uint32(len(region.OuterVertices)))
-    for _, vertex := range region.OuterVertices {
-      binary.Write(rw, binary.LittleEndian, float64(vertex.X))
-      binary.Write(rw, binary.LittleEndian, float64(vertex.Y))
-    }
-    // Write the actual triagles as indices.
-    binary.Write(rw, binary.LittleEndian, uint32(len(region.Triangles)))
-    for _, triangle := range region.Triangles {
-      binary.Write(rw, binary.LittleEndian, uint32(triangle.T1))
-      binary.Write(rw, binary.LittleEndian, uint32(triangle.T2))
-      binary.Write(rw, binary.LittleEndian, uint32(triangle.T3))
-    }
+func WriteData(countries chan Country) {
+  err := os.Mkdir(outputPath, 0755)
+  if err != nil {
+    panic(err)
   }
-  // Unlock the ReadWriter for writing.
-  writingMutex.Unlock()
+  ConvertCountries(countries)
 }
 
 // ConvertCountries takes a channel of countries and rewrites and
 // triangles the data to form new data.
-func ConvertCountries(output io.ReadWriter, countries chan Country) {
+func ConvertCountries(countries chan Country) {
   var wg sync.WaitGroup
   for c := range countries {
     wg.Add(1)
@@ -430,7 +440,7 @@ func ConvertCountries(output io.ReadWriter, countries chan Country) {
       country.WritePoly()
       country.Triangulate()
       country.ReadTriangulated()
-      country.WriteBytes(output)
+      country.WriteBack()
       wg.Done()
     }(c)
   }
@@ -478,6 +488,7 @@ func main () {
     close(countries)
     wg.Done()
   }()
-  WriteData(path.Join(pwd, "out.dat"), countries, nr)
+  outputPath = path.Join(pwd, "share/countries")
+  WriteData(countries)
   wg.Wait()
 }

@@ -82,8 +82,8 @@ SDL_Surface *Screen::initSDL() {
   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 
   glEnable(GL_DEPTH_TEST);
-  // glEnable(GL_CULL_FACE);
-  glDisable(GL_CULL_FACE);
+  glEnable(GL_CULL_FACE);
+  // glDisable(GL_CULL_FACE);
 
   return screen;
 }
@@ -315,6 +315,12 @@ void Screen::executeInput( const SDLKey & key ) {
     case SDLK_RIGHT:
     case SDLK_d:
       _world->getCamera().move(5.0f, 0.0f);
+      break;
+    case SDLK_p:
+      _world->showMore();
+      break;
+    case SDLK_o:
+      _world->showLess();
       break;
     default:
       break;

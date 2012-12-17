@@ -19,11 +19,13 @@ set(revolution_SRCS
 
 find_package(CEGUI REQUIRED COMPONENTS OPENGL)
 find_package(SDL REQUIRED)
+find_package(Boost COMPONENTS filesystem system REQUIRED)
 
 include_directories(${INCLUDE_DIR})
 include_directories(${LIB_DIR}/glm)
+include_directories(${Boost_INCLUDE_DIR})
 
-link_libraries(${CEGUI_LIBRARY} ${SDL_LIBRARY})
+link_libraries(${CEGUI_LIBRARY} ${SDL_LIBRARY} ${Boost_LIBRARIES})
 if(CMAKE_BUILD_TYPE MATCHES Debug)
   find_package(OpenGL)
   find_package(GLEW)

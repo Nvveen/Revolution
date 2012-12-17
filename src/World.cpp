@@ -18,6 +18,7 @@
 #include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/random.hpp>
+#include <boost/filesystem.hpp>
 #include "World.hpp"
 
 World::World(const unsigned int & width, const unsigned int & height)
@@ -47,51 +48,94 @@ void World::init ()
 
   std::cout << "Loading countries..." << std::endl;
 
-  std::ifstream file;
-  file.open("share/out.dat", std::ios::binary);
-  unsigned short numCountries = 0;
-  file.read(reinterpret_cast<char *>(&numCountries), sizeof(unsigned short));
-  for (unsigned short i = 0; i < numCountries; i++) {
-    glm::vec4 randomColor = glm::vec4(glm::vecRand3(0.0f, 1.0f), 1.0f);
-    Drawable *d = new Drawable(_shader, randomColor);
-    unsigned short nameLength, numPolygons;
-    std::vector<Polygon> polygons;
-    file.read(reinterpret_cast<char *>(&nameLength), sizeof(unsigned char));
-    char *name = new char[nameLength+1];
-    file.read(reinterpret_cast<char *>(&name[0]), nameLength);
-    name[nameLength] = '\0';
-    file.read(reinterpret_cast<char *>(&numPolygons), sizeof(unsigned short));
-    for (unsigned short j = 0; j < numPolygons; j++) {
-      polygons.push_back(Polygon());
-      unsigned int numVerts, numEdges;
-      file.read(reinterpret_cast<char *>(&numVerts), sizeof(unsigned int));
-      for (unsigned int k = 0; k < numVerts; k++) {
-        double x, y;
-        file.read(reinterpret_cast<char *>(&x), sizeof(double));
-        file.read(reinterpret_cast<char *>(&y), sizeof(double));
-        polygons.back().vertices.push_back(Vec3(x, -10, y));
-      }
-      file.read(reinterpret_cast<char *>(&numEdges), sizeof(unsigned int));
-      for (unsigned int k = 0; k < numEdges; k++) {
-        unsigned int x, y, z;
-        file.read(reinterpret_cast<char *>(&x), sizeof(unsigned int));
-        file.read(reinterpret_cast<char *>(&y), sizeof(unsigned int));
-        file.read(reinterpret_cast<char *>(&z), sizeof(unsigned int));
-        polygons.back().indices.push_back(IVec3(x, y, z));
-      }
+  // Read country list
+  std::ifstream countryList("share/countries/countrylist");
+  std::vector<std::string> names;
+  while (!countryList.eof()) {
+    std::string name;
+    getline(countryList, name);
+    if (name.size() > 0) {
+      names.push_back(name);
     }
-    d->name = std::string(name);
-    d->addPolygons(polygons);
-    _drawables.push_back(d);
   }
+  countryList.close();
+  for (auto name : names) {
+    std::string pathName = "share/countries/" + name + "/";
+    using namespace boost::filesystem;
+    path p(pathName);
+    glm::vec4 randomColor = glm::vec4(glm::vecRand3(0.0f, 1.0f), 1.0f);
+    Drawable *country = new Drawable(_shader, randomColor);
+    country->name = name;
+    try {
+      if (exists(p)) {
+        if(is_directory(p)) {
+          directory_iterator it(p), end_it;
+          // Iterate over each file in each directory, a polygon.
+          std::vector<Polygon> polygons;
+          for (; it != end_it; ++it) {
+            std::ifstream regionFile(it->path().string());
+            std::string name;
+            regionFile.ignore(2);
+            regionFile >> name;
+            regionFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            int vertSize = 0, triangleSize = 0;
+            regionFile >> vertSize >> triangleSize;
+            regionFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            polygons.push_back(Polygon());
+            regionFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            for (int i = 0; i < vertSize; i++) {
+              std::string str;
+              getline(regionFile, str);
+              std::stringstream line(str);
+              if (str.size() < 5 || str[0] == '#')
+                std::cout << str << std::endl;
+              Vec3 vec;
+              getline(line, str, ',');
+              std::stringstream(str) >> vec[0];
+              vec[0] = -vec[0];
+              getline(line, str);
+              std::stringstream(str) >> vec[2];
+              vec[1] = -10;
+              polygons.back().vertices.push_back(vec);
+            }
+            regionFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            for (int i = 0; i < triangleSize; i++) {
+              std::string str;
+              getline(regionFile, str);
+              std::stringstream line(str);
+              IVec3 vec;
+              getline(line, str, ',');
+              std::stringstream(str) >> vec[0];
+              getline(line, str, ',');
+              std::stringstream(str) >> vec[1];
+              getline(line, str);
+              std::stringstream(str) >> vec[2];
+              polygons.back().indices.push_back(vec);
+            }
+          }
+          country->addPolygons(polygons);
+        }
+      } else {
+        std::cerr << pathName << " does not exist." << std::endl;
+      }
+      _drawables.push_back(country);
+    }
+    catch (filesystem_error const & e) {
+      std::cerr << e.what() << std::endl;
+    }
+  }
+
   std::cout << "Done loading countries..." << std::endl;
+  std::cout << "Loaded " << names.size() << " countries." << std::endl;
+  _maxDrawable = _drawables.size();
 }
 
 void World::draw()
 {
   int i = 0;
   for (auto p : _drawables) {
-    p->draw(_cam);
+    if (i < _maxDrawable)
+      p->draw(_cam);
     i++;
   }
 }
