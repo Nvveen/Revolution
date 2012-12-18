@@ -22,10 +22,14 @@
 
 #include <glm/gtc/type_precision.hpp>
 
-typedef glm::gtc::type_precision::f64vec3 Vec3;
 typedef glm::ivec3 IVec3;
 
 struct Polygon;
+
+struct Vertex {
+  glm::dvec3 position;
+  glm::dvec3 normal = glm::dvec3(0.0);
+};
 
 class Drawable {
   public:
@@ -33,7 +37,7 @@ class Drawable {
     Drawable ( Shader * const shader, glm::vec4 const & primary );
     virtual ~Drawable ();
 
-    void addPolygon ( std::vector<Vec3> const & vertData,
+    void addPolygon ( std::vector<Vertex> const & vertData,
                       std::vector<IVec3> const & indData );
 
     void draw ( Camera * const cam );
@@ -55,14 +59,14 @@ class Polygon {
     Polygon ();
     virtual ~Polygon() {}
 
-    void addData ( std::vector<Vec3> const & vertData,
+    void addData ( std::vector<Vertex> const & vertData,
                    std::vector<IVec3> const & indData );
     void draw ();
 
     friend class Drawable;
   private:
-    std::vector<Vec3> vertices;
-    std::vector<IVec3> indices;
+    std::vector<Vertex> _vertices;
+    std::vector<IVec3> _triangles;
 
     GLuint _vao, _vbo, _ibo;
 };

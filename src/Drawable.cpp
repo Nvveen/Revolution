@@ -45,7 +45,7 @@ void Drawable::draw ( Camera * const cam )
   _shader->unbind();
 }
 
-void Drawable::addPolygon ( std::vector<Vec3> const & vertData,
+void Drawable::addPolygon ( std::vector<Vertex> const & vertData,
                              std::vector<IVec3> const & indData )
 {
   _polygons.push_back(Polygon());
@@ -61,50 +61,65 @@ Polygon::Polygon ()
 {
 }
 
-void Polygon::addData ( std::vector<Vec3> const & vertData,
-                        std::vector<IVec3> const & indData )
+void Polygon::addData ( std::vector<Vertex> const & vertData,
+                        std::vector<IVec3> const & triangleData )
 {
-  vertices = vertData;
-  indices = indData;
-  vertices.resize(vertices.size()*2);
-  for (unsigned int i = vertices.size()/2; i < vertices.size(); i++) {
-    vertices[i] = vertices[i-vertices.size()/2];
-    vertices[i][1] += 0.5f;
+  _vertices = vertData;
+  _triangles = triangleData;
+  for (auto & index : _triangles) {
+    glm::dvec3 vec1 = _vertices[index[1]].position - _vertices[index[0]].position;
+    glm::dvec3 vec2 = _vertices[index[2]].position - _vertices[index[0]].position;
+    glm::dvec3 normal = glm::normalize(glm::cross(vec1, vec2));
+    _vertices[index[0]].normal += normal;
+    _vertices[index[1]].normal += normal;
+    _vertices[index[2]].normal += normal;
   }
-  indices.resize(indices.size()*2);
-  for (unsigned int i = indices.size()/2; i < indices.size(); i++) {
-    indices[i] = indices[i-indices.size()/2];
-    indices[i][0] += vertices.size()/2;
-    indices[i][1] += vertices.size()/2;
-    indices[i][2] += vertices.size()/2;
+  for (auto &  vertex : _vertices) {
+    vertex.normal = glm::normalize(vertex.normal);
   }
-  for (unsigned int i = 0; i < vertices.size()/2; i++) {
+  _vertices.resize(_vertices.size()*2);
+  for (unsigned int i = _vertices.size()/2; i < _vertices.size(); i++) {
+    _vertices[i] = _vertices[i-_vertices.size()/2];
+    _vertices[i].position[1] += 0.5f;
+  }
+  _triangles.resize(_triangles.size()*2);
+  for (unsigned int i = _triangles.size()/2; i < _triangles.size(); i++) {
+    _triangles[i] = _triangles[i-_triangles.size()/2];
+    _triangles[i][0] += _vertices.size()/2;
+    _triangles[i][1] += _vertices.size()/2;
+    _triangles[i][2] += _vertices.size()/2;
+  }
+  for (unsigned int i = 0; i < _vertices.size()/2; i++) {
     unsigned int j = i+1, p, q;
-    if (i == (vertices.size()/2)-1)
+    if (i == (_vertices.size()/2)-1)
       j = 0;
-    p = i+vertices.size()/2;
-    q = j+vertices.size()/2;
-    indices.push_back(IVec3(p, i, j));
-    indices.push_back(IVec3(p, j, q));
+    p = i+_vertices.size()/2;
+    q = j+_vertices.size()/2;
+    _triangles.push_back(IVec3(p, i, j));
+    _triangles.push_back(IVec3(p, j, q));
   }
 
   glGenVertexArrays(1, &_vao);
   glBindVertexArray(_vao);
   glEnableVertexAttribArray(0);
+  glEnableVertexAttribArray(1);
 
   glGenBuffers(1, &_vbo);
   glGenBuffers(1, &_ibo);
 
   glBindBuffer(GL_ARRAY_BUFFER, _vbo);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(GLdouble)*vertices.size()*3,
-      &vertices[0], GL_STATIC_DRAW);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*indices.size()*3,
-      &indices[0], GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(GLdouble)*_vertices.size()*6,
+      &_vertices[0], GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*_triangles.size()*3,
+      &_triangles[0], GL_STATIC_DRAW);
 
-  glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, sizeof(GLdouble)*3,
+  glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, sizeof(GLdouble)*6,
       (void *)0);
+  glVertexAttribPointer(1, 3, GL_DOUBLE, GL_FALSE, sizeof(GLdouble)*6,
+      (void *)(sizeof(GLdouble)*3));
 
+  glDisableVertexAttribArray(1);
   glDisableVertexAttribArray(0);
   glBindVertexArray(0);
 }
@@ -113,12 +128,14 @@ void Polygon::draw ()
 {
   glBindVertexArray(_vao);
   glEnableVertexAttribArray(0);
+  glEnableVertexAttribArray(1);
 
   glBindBuffer(GL_ARRAY_BUFFER, _vbo);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo);
-  glDrawElements(GL_TRIANGLES, GLint(indices.size())*3, GL_UNSIGNED_INT,
+  glDrawElements(GL_TRIANGLES, GLint(_triangles.size())*3, GL_UNSIGNED_INT,
       (void *)0);
 
+  glDisableVertexAttribArray(1);
   glDisableVertexAttribArray(0);
   glBindVertexArray(0);
 }

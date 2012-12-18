@@ -86,7 +86,7 @@ void World::init ()
             regionFile >> vertSize >> triangleSize;
             regionFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             regionFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            std::vector<Vec3> vert;
+            std::vector<Vertex> vert;
             std::vector<IVec3> ind;
             for (int i = 0; i < vertSize; i++) {
               std::string str;
@@ -94,14 +94,14 @@ void World::init ()
               std::stringstream line(str);
               if (str.size() < 5 || str[0] == '#')
                 std::cout << str << std::endl;
-              Vec3 vec;
+              Vertex v;
               getline(line, str, ',');
-              std::stringstream(str) >> vec[0];
-              vec[0] = -vec[0];
+              std::stringstream(str) >> v.position[0];
+              v.position[0] = -v.position[0];
               getline(line, str);
-              std::stringstream(str) >> vec[2];
-              vec[1] = 0;
-              vert.push_back(vec);
+              std::stringstream(str) >> v.position[2];
+              v.position[1] = 0;
+              vert.push_back(v);
             }
             regionFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             for (int i = 0; i < triangleSize; i++) {
