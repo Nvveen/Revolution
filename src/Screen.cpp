@@ -84,6 +84,7 @@ SDL_Surface *Screen::initSDL() {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
   // glDisable(GL_CULL_FACE);
+  glFrontFace(GL_CCW);
 
   return screen;
 }
@@ -105,7 +106,8 @@ void Screen::render() {
   SDL_GL_SwapBuffers();
 }
  
-void Screen::injectInput() {
+void Screen::injectInput ()
+{
   SDL_Event e;
   // Go through all available events:
   while (SDL_PollEvent(&e)) {
@@ -162,12 +164,14 @@ void Screen::injectInput() {
         CEGUI::System::getSingleton().notifyDisplaySizeChanged(CEGUI::Size(
               e.resize.w, e.resize.h));
 #endif
+        // TODO camera resize here.
         break;
     }
   }
 }
 
-void Screen::injectTimePulse( double & ltp ) {
+void Screen::injectTimePulse ( double & ltp )
+{
   double current = 0.001 * SDL_GetTicks();
 #ifndef NOCEGUI
   CEGUI::System::getSingleton().injectTimePulse(static_cast<float>(current -
@@ -246,13 +250,11 @@ void Screen::handleMouseDown( Uint8 button, const int & x, const int & y ) {
 #ifndef NOCEGUI
       CEGUI::System::getSingleton().injectMouseWheelChange(-1);
 #endif
-      _world->getCamera().zoom(-1.0f);
       break;
     case SDL_BUTTON_WHEELUP:
 #ifndef NOCEGUI
       CEGUI::System::getSingleton().injectMouseWheelChange(+1);
 #endif
-      _world->getCamera().zoom(1.0f);
       break;
     default:
       std::cout << "handleMouseDown ignored '" << static_cast<int>(button)
@@ -302,19 +304,25 @@ void Screen::executeInput( const SDLKey & key ) {
   switch (key) {
     case SDLK_UP:
     case SDLK_w:
-      _world->getCamera().move(0.0f, 3.0f);
+      _world->getCamera().move(0.0f, 0.0f, 3.0f);
       break;
     case SDLK_DOWN:
     case SDLK_s:
-      _world->getCamera().move(0.0f, -3.0f);
+      _world->getCamera().move(0.0f, 0.0f, -3.0f);
       break;
     case SDLK_LEFT:
     case SDLK_a:
-      _world->getCamera().move(-3.0f, 0.0f);
+      _world->getCamera().move(3.0f, 0.0f, 0.0f);
       break;
     case SDLK_RIGHT:
     case SDLK_d:
-      _world->getCamera().move(3.0f, 0.0f);
+      _world->getCamera().move(-3.0f, 0.0f, 0.0f);
+      break;
+    case SDLK_z:
+      _world->getCamera().move(0.0f, 3.0f, 0.0f);
+      break;
+    case SDLK_x:
+      _world->getCamera().move(0.0f, -3.0f, 0.0f);
       break;
     case SDLK_p:
       _world->showMore();

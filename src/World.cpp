@@ -97,9 +97,10 @@ void World::init ()
               Vec3 vec;
               getline(line, str, ',');
               std::stringstream(str) >> vec[0];
+              vec[0] = -vec[0];
               getline(line, str);
               std::stringstream(str) >> vec[2];
-              vec[1] = -10;
+              vec[1] = 0;
               vert.push_back(vec);
             }
             regionFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
