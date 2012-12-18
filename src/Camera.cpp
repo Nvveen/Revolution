@@ -22,7 +22,7 @@ Camera::Camera (const unsigned int & width, const unsigned int & height) {
 
   _horizontalAngle = float(M_PI);
   _verticalAngle = 45.6f;
-  _pos = glm::vec3(0, -50, 50);
+  _pos = glm::vec3(0, 50, 50);
   getView();
   getProjection();
 }
@@ -39,7 +39,6 @@ void Camera::look( const float & refX, const float & refY, const float & i,
   float mouseSpeed = 0.005f;
   _horizontalAngle -= mouseSpeed * (refX-i);
   _verticalAngle += mouseSpeed * (refY-j);
-  std::cout << _horizontalAngle << " by " << _verticalAngle << std::endl;
 }
 
 void Camera::zoom ( float const & val )
@@ -56,7 +55,7 @@ glm::mat4 Camera::getProjection() {
 glm::mat4 Camera::getView() {
   glm::vec3 direction = getDirection();
   glm::vec3 right = getRight();
-  glm::vec3 up = glm::cross(right, direction);
+  glm::vec3 up = glm::cross(direction, right);
 
   return glm::lookAt(_pos, _pos+direction, up);
 }

@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License along with 
 // Revolution. If not, see <http://www.gnu.org/licenses/>.
 #include <GL/glew.h>
+#include <algorithm>
 #include "Drawable.hpp"
 
 Drawable::Drawable ()
@@ -20,7 +21,8 @@ Drawable::Drawable ()
 }
 
 Drawable::Drawable ( Shader * const shader, glm::vec4 const & primary ) : 
-  _shader(shader), _primaryColor(primary), _model(glm::mat4(1.0))
+  _shader(shader), _primaryColor(primary), _model(glm::mat4(1.0)),
+  _heightDistortion(0)
 {
 }
 
@@ -34,6 +36,7 @@ void Drawable::draw ( Camera * const cam )
   glm::mat4 mvp = cam->transform(_model);
   _shader->setUniform("vMVP", mvp);
   _shader->setUniform("objectColor", _primaryColor);
+  _shader->setUniform("height", _heightDistortion);
 
   for (auto polygon : _polygons) {
     polygon.draw();
@@ -47,6 +50,11 @@ void Drawable::addPolygon ( std::vector<Vec3> const & vertData,
 {
   _polygons.push_back(Polygon());
   _polygons.back().addData(vertData, indData);
+
+  if (name == "Spain") {
+    _heightDistortion = 10.0f;
+    std::cout << "Spain can go fuck itself." << std::endl;
+  }
 }
 
 Polygon::Polygon ()
@@ -58,6 +66,27 @@ void Polygon::addData ( std::vector<Vec3> const & vertData,
 {
   vertices = vertData;
   indices = indData;
+  vertices.resize(vertices.size()*2);
+  for (unsigned int i = vertices.size()/2; i < vertices.size(); i++) {
+    vertices[i] = vertices[i-vertices.size()/2];
+    vertices[i][1] += 0.5f;
+  }
+  indices.resize(indices.size()*2);
+  for (unsigned int i = indices.size()/2; i < indices.size(); i++) {
+    indices[i] = indices[i-indices.size()/2];
+    indices[i][0] += vertices.size()/2;
+    indices[i][1] += vertices.size()/2;
+    indices[i][2] += vertices.size()/2;
+  }
+  for (unsigned int i = 0; i < vertices.size()/2; i++) {
+    unsigned int j = i+1, p, q;
+    if (i == (vertices.size()/2)-1)
+      j = 0;
+    p = i+vertices.size()/2;
+    q = j+vertices.size()/2;
+    indices.push_back(IVec3(p, i, j));
+    indices.push_back(IVec3(p, j, q));
+  }
 
   glGenVertexArrays(1, &_vao);
   glBindVertexArray(_vao);

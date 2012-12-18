@@ -129,7 +129,7 @@ GLuint Shader::compileShader( std::string code, GLenum type ) {
 
 bool Shader::setUniform ( std::string name, GLfloat val ) {
     if ( _shaderProgram && _bound )
-        glUniform1i(_uniformLocs[name], int(val));
+        glUniform1f(_uniformLocs[name], val);
     return true;
 }
 

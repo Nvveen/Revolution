@@ -46,8 +46,8 @@ class Drawable {
     unsigned long _numTriangles;
     glm::vec4 _primaryColor;
 
-    GLuint _vao, _vbo, _ibo;
     glm::mat4 _model;
+    float _heightDistortion;
 };
 
 class Polygon {
@@ -58,6 +58,8 @@ class Polygon {
     void addData ( std::vector<Vec3> const & vertData,
                    std::vector<IVec3> const & indData );
     void draw ();
+
+    friend class Drawable;
   private:
     std::vector<Vec3> vertices;
     std::vector<IVec3> indices;

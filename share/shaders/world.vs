@@ -19,9 +19,13 @@ Revolution. If not, see <http://www.gnu.org/licenses/>.
 layout(location = 0) in vec3 position;
 
 uniform mat4 vMVP;
+uniform float height;
 
 void main() {
   vec4 pos = vec4(position, 1.0f);
+  if (fract(pos.y) != 0.0) {
+    pos.y += height;
+  }
   gl_Position = vMVP * pos;
 }
 

@@ -45,6 +45,7 @@ void World::init ()
   _shader->link();
   _shader->setUniformLocation("vMVP");
   _shader->setUniformLocation("objectColor");
+  _shader->setUniformLocation("height");
 
   std::cout << "Loading countries..." << std::endl;
 
