@@ -28,7 +28,9 @@ Camera::Camera (const unsigned int & width, const unsigned int & height) {
 }
 
 void Camera::move( const float & deltaX, const float & deltaY ) {
-  _pos += glm::vec3(0.2*deltaX, 0, 0.2*deltaY);
+  _dir = getDirection();
+  _pos += _dir*deltaY;
+  _pos += getRight()*deltaX;
   std::cout << _pos[0] << " " << _pos[1] << " " << _pos[2] << std::endl;
 }
 

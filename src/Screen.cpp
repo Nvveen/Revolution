@@ -302,19 +302,19 @@ void Screen::executeInput( const SDLKey & key ) {
   switch (key) {
     case SDLK_UP:
     case SDLK_w:
-      _world->getCamera().move(0.0f, 5.0f);
+      _world->getCamera().move(0.0f, 3.0f);
       break;
     case SDLK_DOWN:
     case SDLK_s:
-      _world->getCamera().move(0.0f, -5.0f);
+      _world->getCamera().move(0.0f, -3.0f);
       break;
     case SDLK_LEFT:
     case SDLK_a:
-      _world->getCamera().move(-5.0f, 0.0f);
+      _world->getCamera().move(-3.0f, 0.0f);
       break;
     case SDLK_RIGHT:
     case SDLK_d:
-      _world->getCamera().move(5.0f, 0.0f);
+      _world->getCamera().move(3.0f, 0.0f);
       break;
     case SDLK_p:
       _world->showMore();
