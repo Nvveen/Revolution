@@ -16,10 +16,30 @@ Revolution. If not, see <http://www.gnu.org/licenses/>.
 */
 #version 330
 
+in vec3 normal0;
 out vec4 color;
 
 uniform vec4 objectColor;
 
+struct DirectionalLight {
+  vec3 Color;
+  float AmbientIntensity;
+  float DiffuseIntensity;
+  vec3 Direction;
+};
+
+uniform DirectionalLight dLight0;
+
 void main() {
-  color = objectColor;
+  vec4 AmbientColor = vec4(dLight0.Color, 1.0f) * dLight0.AmbientIntensity;
+  float DiffuseFactor = dot(normalize(normal0), -dLight0.Direction);
+  vec4 DiffuseColor;
+  if (DiffuseFactor > 0) {
+    DiffuseColor = vec4(dLight0.Color, 1.0f) * dLight0.DiffuseIntensity *
+      DiffuseFactor;
+  }
+  else {
+    DiffuseColor = vec4(0, 0, 0, 0);
+  }
+  color = objectColor * (AmbientColor + DiffuseColor);
 }

@@ -18,8 +18,10 @@ Revolution. If not, see <http://www.gnu.org/licenses/>.
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
+out vec3 normal0;
 
 uniform mat4 vMVP;
+uniform mat4 vWorld;
 uniform float height;
 
 void main() {
@@ -28,5 +30,7 @@ void main() {
     pos.y += height;
   }
   gl_Position = vMVP * pos;
+
+  normal0 = (vWorld * vec4(normal, 0.0)).xyz;
 }
 

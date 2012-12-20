@@ -330,6 +330,34 @@ void Screen::executeInput( const SDLKey & key ) {
     case SDLK_o:
       _world->showLess();
       break;
+    case SDLK_k:
+    case SDLK_l:
+    case SDLK_m:
+    case SDLK_n:
+      static float diffInt = _world->getDefaultLight().DiffuseIntensity;
+      static float ambInt = _world->getDefaultLight().AmbientIntensity;
+      if (key == SDLK_m)
+        diffInt += 0.05f;
+      if (key == SDLK_n)
+        diffInt -= 0.05f;
+      if (key == SDLK_l)
+        ambInt += 0.05f;
+      if (key == SDLK_k)
+        ambInt -= 0.05f;
+      if (diffInt > 1.0f) 
+        diffInt = 1.0f;
+      if (diffInt < 0.0f)
+        diffInt = 0.0f;
+      if (ambInt > 1.0f)
+        ambInt = 1.0f;
+      if (ambInt < 0.0f)
+        ambInt = 0.0f;
+      if (key == SDLK_n || key == SDLK_m)
+        _world->changeDiffuseIntensity(diffInt);
+      else
+        _world->changeAmbientIntensity(ambInt);
+      std::cout << ambInt << " " << diffInt << std::endl;
+      break;
     default:
       break;
   }

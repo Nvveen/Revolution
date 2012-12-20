@@ -27,6 +27,7 @@ class Camera {
     void move ( float const & dX, float const & dY, float const & dZ );
     void look ( float const & rX, float const & rY, float const & i,
                 float const & j );
+
   protected:
   private:
     glm::vec3 _pos, _target, _up;

@@ -21,6 +21,8 @@
 #include "Camera.hpp"
 #include "Drawable.hpp"
 
+struct DirectionalLight;
+
 class World {
   public:
     World () {}
@@ -30,12 +32,16 @@ class World {
     void draw ();
     Camera & getCamera();
 
-    void showMore();
-    void showLess();
+    void showMore ();
+    void showLess ();
+    void changeDiffuseIntensity ( float const & val);
+    void changeAmbientIntensity ( float const & val );
+    DirectionalLight getDefaultLight ();
   protected:
   private:
     Shader *_shader;
     Camera *_cam;
+    DirectionalLight *_dLight0;
     int _show = 0;
     int _maxDrawable = 0;
     std::vector<Drawable *> _drawables;
@@ -43,19 +49,46 @@ class World {
     void init ();
 };
 
+struct DirectionalLight {
+  glm::vec3 Color, Direction;
+  float AmbientIntensity, DiffuseIntensity;
+};
+
 inline Camera & World::getCamera ()
 {
   return *(this->_cam);
 }
 
-inline void World::showMore() {
+inline void World::showMore ()
+{
   _maxDrawable++;
   std::cout << "Showing " << _maxDrawable << std::endl;
 }
 
-inline void World::showLess() {
+inline void World::showLess ()
+{
   _maxDrawable--;
   std::cout << "Showing " << _maxDrawable << std::endl;
+}
+
+inline void World::changeDiffuseIntensity ( float const & val )
+{
+  _dLight0->DiffuseIntensity = val;
+}
+
+inline void World::changeAmbientIntensity ( float const & val )
+{
+  _dLight0->AmbientIntensity = val;
+}
+
+inline DirectionalLight World::getDefaultLight ()
+{
+  DirectionalLight d;
+  d.Color = glm::vec3(1, 1, 1);
+  d.Direction = glm::normalize(glm::vec3(1, -1, 0));
+  d.AmbientIntensity = 0.5f;
+  d.DiffuseIntensity = 0.5f;
+  return d;
 }
 
 #endif

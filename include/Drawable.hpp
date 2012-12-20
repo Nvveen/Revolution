@@ -28,7 +28,7 @@ struct Polygon;
 
 struct Vertex {
   glm::dvec3 position;
-  glm::dvec3 normal = glm::dvec3(0.0);
+  glm::dvec3 normal = glm::dvec3(0.0, 0.0, 0.0);
 };
 
 class Drawable {

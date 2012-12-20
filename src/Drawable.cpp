@@ -66,17 +66,6 @@ void Polygon::addData ( std::vector<Vertex> const & vertData,
 {
   _vertices = vertData;
   _triangles = triangleData;
-  for (auto & index : _triangles) {
-    glm::dvec3 vec1 = _vertices[index[1]].position - _vertices[index[0]].position;
-    glm::dvec3 vec2 = _vertices[index[2]].position - _vertices[index[0]].position;
-    glm::dvec3 normal = glm::normalize(glm::cross(vec1, vec2));
-    _vertices[index[0]].normal += normal;
-    _vertices[index[1]].normal += normal;
-    _vertices[index[2]].normal += normal;
-  }
-  for (auto &  vertex : _vertices) {
-    vertex.normal = glm::normalize(vertex.normal);
-  }
   _vertices.resize(_vertices.size()*2);
   for (unsigned int i = _vertices.size()/2; i < _vertices.size(); i++) {
     _vertices[i] = _vertices[i-_vertices.size()/2];
@@ -89,14 +78,30 @@ void Polygon::addData ( std::vector<Vertex> const & vertData,
     _triangles[i][1] += _vertices.size()/2;
     _triangles[i][2] += _vertices.size()/2;
   }
+  for (unsigned int i  = 0; i < _triangles.size()/2; i++){
+    unsigned int temp = _triangles[i][1];
+    _triangles[i][1] = _triangles[i][2];
+    _triangles[i][2] = temp;
+  }
   for (unsigned int i = 0; i < _vertices.size()/2; i++) {
     unsigned int j = i+1, p, q;
     if (i == (_vertices.size()/2)-1)
       j = 0;
     p = i+_vertices.size()/2;
     q = j+_vertices.size()/2;
-    _triangles.push_back(IVec3(p, i, j));
-    _triangles.push_back(IVec3(p, j, q));
+    _triangles.push_back(IVec3(p, j, i));
+    _triangles.push_back(IVec3(p, q, j));
+  }
+  for (auto & index : _triangles) {
+    glm::dvec3 vec1 = _vertices[index[1]].position - _vertices[index[0]].position;
+    glm::dvec3 vec2 = _vertices[index[2]].position - _vertices[index[0]].position;
+    glm::dvec3 normal = glm::normalize(glm::cross(vec1, vec2));
+    _vertices[index[0]].normal += normal;
+    _vertices[index[1]].normal += normal;
+    _vertices[index[2]].normal += normal;
+  }
+  for (auto & vertex : _vertices) {
+    vertex.normal = glm::normalize(vertex.normal);
   }
 
   glGenVertexArrays(1, &_vao);

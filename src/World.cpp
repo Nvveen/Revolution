@@ -24,6 +24,8 @@
 World::World(const unsigned int & width, const unsigned int & height)
 {
   _cam = new Camera(width, height);
+  _dLight0 = new DirectionalLight;
+  *_dLight0 = getDefaultLight();
   init();
 }
 
@@ -31,6 +33,7 @@ World::~World()
 {
   delete _cam;
   delete _shader;
+  delete _dLight0;
   for (auto p : _drawables)
     delete p;
 }
@@ -44,8 +47,13 @@ void World::init ()
   _shader->add(p+"fs", GL_FRAGMENT_SHADER);
   _shader->link();
   _shader->setUniformLocation("vMVP");
+  _shader->setUniformLocation("vWorld");
   _shader->setUniformLocation("objectColor");
   _shader->setUniformLocation("height");
+  _shader->setUniformLocation("dLight0.Color");
+  _shader->setUniformLocation("dLight0.AmbientIntensity");
+  _shader->setUniformLocation("dLight0.DiffuseIntensity");
+  _shader->setUniformLocation("dLight0.Direction");
 
   std::cout << "Loading countries..." << std::endl;
 
@@ -137,6 +145,12 @@ void World::init ()
 
 void World::draw()
 {
+  _shader->bind();
+  _shader->setUniform("dLight0.Color", _dLight0->Color);
+  _shader->setUniform("dLight0.AmbientIntensity", _dLight0->AmbientIntensity);
+  _shader->setUniform("dLight0.Direction", _dLight0->Direction);
+  _shader->setUniform("dLight0.DiffuseIntensity", _dLight0->DiffuseIntensity);
+  _shader->setUniform("vWorld", glm::mat4(1.0));
   int i = 0;
   for (auto p : _drawables) {
     if (i < _maxDrawable)
