@@ -10,6 +10,7 @@ set(INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 set(SRC_DIR "${PROJECT_SOURCE_DIR}/src")
 set(revolution_SRCS
   ${SRC_DIR}/Camera.cpp
+  ${SRC_DIR}/DataManager.cpp
   ${SRC_DIR}/Drawable.cpp
   ${SRC_DIR}/Main.cpp
   ${SRC_DIR}/Screen.cpp

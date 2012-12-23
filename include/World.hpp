@@ -20,6 +20,7 @@
 #include "Shader.hpp"
 #include "Camera.hpp"
 #include "Drawable.hpp"
+#include "DataManager.hpp"
 
 struct DirectionalLight;
 
@@ -49,8 +50,11 @@ class World {
     int _maxDrawable = 0;
     std::vector<Drawable *> _drawables;
     Drawable *_selected;
+
+    std::vector<DataManager *> _datasets;
     
     void init ();
+    void readDatasets ();
 };
 
 struct DirectionalLight {

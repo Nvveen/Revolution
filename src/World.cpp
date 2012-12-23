@@ -36,6 +36,8 @@ World::~World()
   delete _dLight0;
   for (auto p : _drawables)
     delete p;
+  for (auto set : _datasets)
+    delete set;
 }
 
 void World::init ()
@@ -70,8 +72,8 @@ void World::init ()
   countryList.close();
   for (auto name : names) {
     std::string pathName = "share/countries/" + name + "/";
-    using namespace boost::filesystem;
-    path p(pathName);
+    namespace bfs = boost::filesystem;
+    bfs::path p(pathName);
     glm::vec4 randomColor(0.0f);
     while (randomColor[0] < 0.1f && randomColor[1] < 0.1f &&
         randomColor[2] < 0.1f) {
@@ -80,9 +82,9 @@ void World::init ()
     Drawable *country = new Drawable(_shader, randomColor);
     country->name = name;
     try {
-      if (exists(p)) {
-        if(is_directory(p)) {
-          directory_iterator it(p), end_it;
+      if (bfs::exists(p)) {
+        if(bfs::is_directory(p)) {
+          bfs::directory_iterator it(p), end_it;
           // Iterate over each file in each directory, a polygon.
           for (; it != end_it; ++it) {
             std::ifstream regionFile(it->path().string());
@@ -133,7 +135,7 @@ void World::init ()
       }
       _drawables.push_back(country);
     }
-    catch (filesystem_error const & e) {
+    catch (bfs::filesystem_error const & e) {
       std::cerr << e.what() << std::endl;
     }
   }
@@ -141,6 +143,8 @@ void World::init ()
   std::cout << "Done loading countries..." << std::endl;
   std::cout << "Loaded " << names.size() << " countries." << std::endl;
   _maxDrawable = _drawables.size();
+  std::cout << "Loading datasets... " << std::endl;
+  readDatasets();
 }
 
 void World::draw()
@@ -177,5 +181,24 @@ void World::raiseSelected(float const & amount)
   if (_selected != NULL) {
     std::cout << "Raising " << _selected->name << " by " << amount << std::endl;
     _selected->setHeightDistortion(amount);
+  }
+}
+
+void World::readDatasets ()
+{
+  namespace bfs = boost::filesystem;
+  bfs::path p("share/datasets/");
+  try {
+    if (bfs::exists(p)) {
+      bfs::directory_iterator it(p), end_it;
+      for (; it != end_it; ++it) {
+        std::cout << "File: " << *it << std::endl;
+      }
+    } else {
+      std::cerr << p << " does not exist." << std::endl;
+    }
+  }
+  catch (bfs::filesystem_error const & e) {
+    std::cerr << e.what() << std::endl;
   }
 }
