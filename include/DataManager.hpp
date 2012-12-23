@@ -16,14 +16,17 @@
 #define  DATAMANAGER_HPP
 
 #include <string>
+#include "Drawable.hpp"
 
 class DataManager {
   public:
     DataManager ();
     virtual ~DataManager ();
-  protected:
-  private:
+
     static DataManager * readFile ( std::string const & dataset );
+  protected:
+    std::vector<Drawable *> _dataMembers;
+  private:
 };
 
 class HeightDataManager : public DataManager {

@@ -14,6 +14,12 @@
 // Revolution. If not, see <http://www.gnu.org/licenses/>.
 #include <fstream>
 #include <iostream>
+#include <boost/tokenizer.hpp>
+#include <vector>
+#include <sstream>
+#include <iterator>
+#include <algorithm>
+#include <map>
 #include "DataManager.hpp"
 
 DataManager::DataManager ()
@@ -27,17 +33,38 @@ DataManager::~DataManager ()
 DataManager * DataManager::readFile ( std::string const & dataset )
 {
   std::ifstream file;
-  file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+  std::string type;
+  std::vector<unsigned int> years;
+  std::map<std::string, std::vector<double>> gdpMap;
   try {
     file.open(dataset);
-    while (!file.eof()) {
-      std::string line;
-      getline(file, line);
-      static bool test = true;
-      if (test) {
-        std::cout << line << std::endl;
-        test = false;
+    std::string line;
+    unsigned int row = 0, col = 0;
+    while (std::getline(file, line)) {
+      typedef boost::tokenizer<boost::escaped_list_separator<char>> Tokenizer;
+      Tokenizer tok(line);
+      std::string name;
+      for (auto item : tok) {
+        std::stringstream buf(item);
+        if (row == 0) {
+          if (col == 0) {
+            type = item;
+          } else {
+            years.emplace_back();
+            buf >> years.back();
+          }
+        } else {
+          if (col == 0) {
+            buf >> name;
+            gdpMap[name] = std::vector<double>(years.size(), -1);
+          } else {
+            buf >> gdpMap[name][col-1];
+          }
+        }
+        col++;
       }
+      col = 0;
+      row++;
     }
   }
   catch (std::ifstream::failure & e) {

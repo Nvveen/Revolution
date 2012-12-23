@@ -41,6 +41,7 @@ class World {
 
     void selectCountry (int const & x, int const & y);
     void raiseSelected ( float const & amount );
+    Drawable * getCountry ( std::string const & name );
   protected:
   private:
     Shader *_shader;

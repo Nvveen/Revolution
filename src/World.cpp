@@ -19,6 +19,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/random.hpp>
 #include <boost/filesystem.hpp>
+#include <algorithm>
 #include "World.hpp"
 
 World::World(const unsigned int & width, const unsigned int & height)
@@ -192,7 +193,7 @@ void World::readDatasets ()
     if (bfs::exists(p)) {
       bfs::directory_iterator it(p), end_it;
       for (; it != end_it; ++it) {
-        std::cout << "File: " << *it << std::endl;
+        _datasets.push_back(DataManager::readFile(it->path().string()));
       }
     } else {
       std::cerr << p << " does not exist." << std::endl;
@@ -201,4 +202,14 @@ void World::readDatasets ()
   catch (bfs::filesystem_error const & e) {
     std::cerr << e.what() << std::endl;
   }
+}
+
+Drawable * World::getCountry ( std::string const & name )
+{
+  auto it = std::find_if(_drawables.begin(), _drawables.end(),
+      [&](Drawable const * d) { return d->name == name; });
+  if (it != _drawables.end())
+    return *it;
+  else
+    return NULL;
 }
