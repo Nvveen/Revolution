@@ -50,11 +50,6 @@ void Drawable::addPolygon ( std::vector<Vertex> const & vertData,
 {
   _polygons.push_back(Polygon());
   _polygons.back().addData(vertData, indData);
-
-  if (name == "Spain") {
-    _heightDistortion = 10.0f;
-    std::cout << "Spain can go fuck itself." << std::endl;
-  }
 }
 
 Polygon::Polygon ()
@@ -102,6 +97,10 @@ void Polygon::addData ( std::vector<Vertex> const & vertData,
   }
   for (auto & vertex : _vertices) {
     vertex.normal = glm::normalize(vertex.normal);
+    if (vertex.normal[0] != vertex.normal[0] || 
+        vertex.normal[1] != vertex.normal[1] ||
+        vertex.normal[2] != vertex.normal[2])
+      vertex.normal = glm::vec3(0, 1, 0);
   }
 
   glGenVertexArrays(1, &_vao);

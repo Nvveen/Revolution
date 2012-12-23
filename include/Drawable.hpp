@@ -39,8 +39,8 @@ class Drawable {
 
     void addPolygon ( std::vector<Vertex> const & vertData,
                       std::vector<IVec3> const & indData );
-
     void draw ( Camera * const cam );
+    void setHeightDistortion ( float const & height );
 
     std::string name;
   protected:
@@ -70,5 +70,12 @@ class Polygon {
 
     GLuint _vao, _vbo, _ibo;
 };
+
+inline void Drawable::setHeightDistortion ( float const & height )
+{
+  _heightDistortion = height;
+  if (_heightDistortion > 30) _heightDistortion = 30;
+  else if (_heightDistortion < 0) _heightDistortion = 0;
+}
 
 #endif

@@ -15,6 +15,7 @@
 #ifndef CAMERA_HPP
 #define CAMERA_HPP
 
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
 
 class Camera {
@@ -28,14 +29,15 @@ class Camera {
     void look ( float const & rX, float const & rY, float const & i,
                 float const & j );
 
+    glm::mat4 getProjection (unsigned int const & width,
+                             unsigned int const & height);
+    glm::mat4 getView();
   protected:
   private:
     glm::vec3 _pos, _target, _up;
     glm::mat4 _projection;
     float _horizontalAngle, _verticalAngle;
 
-    glm::mat4 getProjection();
-    glm::mat4 getView();
     glm::vec3 getDirection();
 };
 
@@ -50,6 +52,17 @@ inline glm::vec3 Camera::getDirection ()
       cos(_verticalAngle) * sin(_horizontalAngle),
       sin(_verticalAngle),
       cos(_verticalAngle) * cos(_horizontalAngle));
+}
+
+inline glm::mat4 Camera::getView()
+{
+  return glm::lookAt(_pos, _target, _up);
+}
+
+inline glm::mat4 Camera::getProjection (unsigned int const & width,
+                                        unsigned int const & height)
+{
+  return glm::perspective(45.0f, float(width)/float(height), 0.1f, 1000.0f);
 }
 
 #endif

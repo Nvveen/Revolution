@@ -34,9 +34,12 @@ class World {
 
     void showMore ();
     void showLess ();
-    void changeDiffuseIntensity ( float const & val);
-    void changeAmbientIntensity ( float const & val );
+    void changeDiffuseIntensity (float const & val);
+    void changeAmbientIntensity (float const & val );
     DirectionalLight getDefaultLight ();
+
+    void selectCountry (int const & x, int const & y);
+    void raiseSelected ( float const & amount );
   protected:
   private:
     Shader *_shader;
@@ -45,6 +48,7 @@ class World {
     int _show = 0;
     int _maxDrawable = 0;
     std::vector<Drawable *> _drawables;
+    Drawable *_selected;
     
     void init ();
 };
@@ -85,7 +89,7 @@ inline DirectionalLight World::getDefaultLight ()
 {
   DirectionalLight d;
   d.Color = glm::vec3(1, 1, 1);
-  d.Direction = glm::normalize(glm::vec3(1, -1, 0));
+  d.Direction = glm::normalize(glm::vec3(0, -50, 0));
   d.AmbientIntensity = 0.5f;
   d.DiffuseIntensity = 0.5f;
   return d;

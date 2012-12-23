@@ -13,13 +13,11 @@
 // You should have received a copy of the GNU General Public License along with 
 // Revolution. If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
-#include <glm/gtc/matrix_transform.hpp>
 #include "Camera.hpp"
 
 Camera::Camera ( unsigned int const & width, unsigned int const & height )
 {
-  _projection = glm::perspective(45.0f, float(width)/float(height), 0.1f,
-      1000.0f);
+  _projection = getProjection(width, height);
 
   _pos = glm::vec3(0, 50.0f, -50.0f);
   _up = glm::vec3(0.0, 1.0f, 0.0f);
@@ -49,9 +47,4 @@ void Camera::look ( float const & refX, float const & refY, float const & i,
   glm::vec3 forward = getDirection();
   _target = _pos + forward;
   std::cout << _horizontalAngle << ", " << _verticalAngle << std::endl;
-}
-
-glm::mat4 Camera::getView()
-{
-  return glm::lookAt(_pos, _target, _up);
 }

@@ -24,8 +24,8 @@ void loop ( Screen & sc )
   std::cout << "No CEGUI defined" << std::endl;
 #endif
   while (sc.isOpened()) {
-    sc.clear();
     sc.render();
+    sc.clear();
   }
   std::cout << " - leaving main loop" << std::endl;
 }

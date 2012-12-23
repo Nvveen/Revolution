@@ -151,10 +151,31 @@ void World::draw()
   _shader->setUniform("dLight0.Direction", _dLight0->Direction);
   _shader->setUniform("dLight0.DiffuseIntensity", _dLight0->DiffuseIntensity);
   _shader->setUniform("vWorld", glm::mat4(1.0));
+  glEnable(GL_STENCIL_TEST);
+  glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
   int i = 0;
   for (auto p : _drawables) {
+    glStencilFunc(GL_ALWAYS, i+1, -1);
     if (i < _maxDrawable)
       p->draw(_cam);
     i++;
+  }
+}
+
+void World::selectCountry (int const & x, int const & y)
+{
+  unsigned int index;
+  glReadPixels(x, y, 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_INT, &index);
+  if (index != 0) {
+    _selected = _drawables[index-1];
+    std::cout << "Selected " << _selected->name << std::endl;
+  }
+}
+
+void World::raiseSelected(float const & amount)
+{
+  if (_selected != NULL) {
+    std::cout << "Raising " << _selected->name << " by " << amount << std::endl;
+    _selected->setHeightDistortion(amount);
   }
 }

@@ -65,6 +65,7 @@ SDL_Surface *Screen::initSDL() {
     std::cerr << "Unable to initialise SDL: " << SDL_GetError();
     exit(0);
   }
+  SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
   SDL_Surface * screen = SDL_SetVideoMode (_w, _h, 0, SDL_OPENGL | SDL_RESIZABLE);
   if (screen == 0) {
     std::cerr << "Unable to set OpenGL videomode: " << SDL_GetError();
@@ -83,6 +84,7 @@ SDL_Surface *Screen::initSDL() {
 
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
+  glClearStencil(0);
   // glDisable(GL_CULL_FACE);
   glFrontFace(GL_CCW);
 
@@ -90,18 +92,18 @@ SDL_Surface *Screen::initSDL() {
 }
 
 void Screen::clear() {
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
  
 void Screen::render() {
+  // Render the world
+  _world->draw();
   injectInput();
   injectTimePulse(lastTimePulse);
 #ifndef NOCEGUI
   // Renders the GUI:
   CEGUI::System::getSingleton().renderGUI();
 #endif
-  // Render the world
-  _world->draw();
   // Updates the screen:
   SDL_GL_SwapBuffers();
 }
@@ -230,14 +232,17 @@ void Screen::createGUI() {
 
 void Screen::handleMouseDown( Uint8 button, const int & x, const int & y ) {
   switch ( button ) {
-#ifndef NOCEGUI
     case SDL_BUTTON_LEFT:
+#ifndef NOCEGUI
       CEGUI::System::getSingleton().injectMouseButtonDown(CEGUI::LeftButton);
+#endif
+      _world->selectCountry(x, _h-y-1);
       break;
     case SDL_BUTTON_MIDDLE:
+#ifndef NOCEGUI
       CEGUI::System::getSingleton().injectMouseButtonDown(CEGUI::MiddleButton);
-      break;
 #endif
+      break;
     case SDL_BUTTON_RIGHT:
 #ifndef NOCEGUI
       CEGUI::System::getSingleton().injectMouseButtonDown(CEGUI::RightButton);
@@ -257,8 +262,8 @@ void Screen::handleMouseDown( Uint8 button, const int & x, const int & y ) {
 #endif
       break;
     default:
-      std::cout << "handleMouseDown ignored '" << static_cast<int>(button)
-         << "'" << std::endl;
+      // std::cout << "handleMouseDown ignored '" << static_cast<int>(button)
+      //    << "'" << std::endl;
       break;
   }
 }
@@ -285,8 +290,8 @@ void Screen::handleMouseUp( Uint8 button ) {
     case SDL_BUTTON_WHEELUP:
       break;
     default:
-    std::cout << "handleMouseUp ignored '" << static_cast<int>(button)
-       << "'" << std::endl;
+    // std::cout << "handleMouseUp ignored '" << static_cast<int>(button)
+    //    << "'" << std::endl;
     break;
   }
  
@@ -358,6 +363,15 @@ void Screen::executeInput( const SDLKey & key ) {
         _world->changeAmbientIntensity(ambInt);
       std::cout << ambInt << " " << diffInt << std::endl;
       break;
+    case SDLK_r:
+      static bool raised = false;
+      if (raised) {
+        _world->raiseSelected(-5.0f);
+        raised = false;
+      } else {
+        _world->raiseSelected(5.0f);
+        raised = true;
+      }
     default:
       break;
   }
