@@ -192,9 +192,8 @@ void World::readDatasets ()
   try {
     if (bfs::exists(p)) {
       bfs::directory_iterator it(p), end_it;
-      for (; it != end_it; ++it) {
-        _datasets.push_back(DataManager::readFile(it->path().string()));
-      }
+      for (; it != end_it; ++it)
+        _datasets.push_back(DataManager::readFile(it->path().string(), *this));
     } else {
       std::cerr << p << " does not exist." << std::endl;
     }
@@ -207,9 +206,8 @@ void World::readDatasets ()
 Drawable * World::getCountry ( std::string const & name )
 {
   auto it = std::find_if(_drawables.begin(), _drawables.end(),
-      [&](Drawable const * d) { return d->name == name; });
+      [&](Drawable * d) { return d->name == name; });
   if (it != _drawables.end())
     return *it;
-  else
-    return NULL;
+  return NULL;
 }

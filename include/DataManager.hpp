@@ -16,23 +16,30 @@
 #define  DATAMANAGER_HPP
 
 #include <string>
+#include <fstream>
 #include "Drawable.hpp"
+
+class World;
 
 class DataManager {
   public:
     DataManager ();
     virtual ~DataManager ();
 
-    static DataManager * readFile ( std::string const & dataset );
+    static DataManager * readFile ( std::string const & dataset,
+                                    World & world );
+    virtual void init ( std::ifstream & dataset, World & world ) = 0;
   protected:
-    std::vector<Drawable *> _dataMembers;
+    std::map<Drawable *, std::vector<double>> _dataMembers;
   private:
 };
 
 class HeightDataManager : public DataManager {
   public:
-    HeightDataManager ( std::string const & dataset );
+    HeightDataManager ( std::ifstream & dataset, World & world );
     virtual ~HeightDataManager ();
+
+    virtual void init ( std::ifstream & dataset, World & world );
   protected:
   private:
 };

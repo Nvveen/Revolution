@@ -12,7 +12,6 @@
 // 
 // You should have received a copy of the GNU General Public License along with 
 // Revolution. If not, see <http://www.gnu.org/licenses/>.
-#include <fstream>
 #include <iostream>
 #include <boost/tokenizer.hpp>
 #include <vector>
@@ -21,6 +20,7 @@
 #include <algorithm>
 #include <map>
 #include "DataManager.hpp"
+#include "World.hpp"
 
 DataManager::DataManager ()
 {
@@ -30,12 +30,12 @@ DataManager::~DataManager ()
 {
 }
 
-DataManager * DataManager::readFile ( std::string const & dataset )
+DataManager * DataManager::readFile ( std::string const & dataset,
+    World & world )
 {
   std::ifstream file;
-  std::string type;
   std::vector<unsigned int> years;
-  std::map<std::string, std::vector<double>> gdpMap;
+  DataManager * man = NULL;
   try {
     file.open(dataset);
     std::string line;
@@ -48,18 +48,24 @@ DataManager * DataManager::readFile ( std::string const & dataset )
         std::stringstream buf(item);
         if (row == 0) {
           if (col == 0) {
-            type = item;
-          } else {
-            years.emplace_back();
-            buf >> years.back();
+            if (item == "H")
+              man = new HeightDataManager(file, world);
+          // } else {
+          //   years.emplace_back();
+          //   buf >> years.back();
           }
-        } else {
-          if (col == 0) {
-            buf >> name;
-            gdpMap[name] = std::vector<double>(years.size(), -1);
-          } else {
-            buf >> gdpMap[name][col-1];
-          }
+        // } else {
+        //   if (col == 0) {
+        //     std::getline(buf, name);
+        //     d = world.getCountry(name);
+        //     if (d != NULL)
+        //       _dataMembers[d] = std::vector<double>(years.size(), -1);
+        //   } else {
+        //     if (d != NULL)
+        //       buf >> _dataMembers[d][col-1];
+        //     else
+        //       std::cout << "Something went wrong for " << name << std::endl;
+        //   }
         }
         col++;
       }
@@ -70,13 +76,54 @@ DataManager * DataManager::readFile ( std::string const & dataset )
   catch (std::ifstream::failure & e) {
     std::cerr << "exception opening file " << e.what() << std::endl;
   }
-  return NULL;
+  return man;
 }
 
-HeightDataManager::HeightDataManager ( std::string const & dataset )
+HeightDataManager::HeightDataManager ( std::ifstream & dataset,
+                                       World & world )
 {
+  init(dataset, world);
 }
 
 HeightDataManager::~HeightDataManager ()
 {
+}
+
+void HeightDataManager::init ( std::ifstream & dataset, World & world )
+{
+  typedef boost::tokenizer<boost::escaped_list_separator<char>> Tokenizer;
+  std::vector<unsigned int> years;
+  std::string line;
+  unsigned int row = 0;
+  // TODO make proper error
+  try {
+    while (std::getline(dataset, line)) {
+      Drawable * d = NULL;
+      Tokenizer tokens(line);
+      unsigned int col = 0;
+      for (auto token : tokens) {
+        std::stringstream buf(token);
+        if (row == 0) {
+          years.emplace_back();
+          buf >> years.back();
+        } else {
+          if (col == 0) {
+            d = world.getCountry(token);
+            if (d != NULL)
+              _dataMembers[d] = std::vector<double>(years.size(), -1);
+            else
+              throw(false);
+          } else {
+            buf >> _dataMembers[d][col-1];
+          }
+        }
+        col++;
+      }
+      row++;
+    }
+  }
+  catch (bool found) {
+    std::cerr << "Country not found, exiting..." << std::endl;
+    throw;
+  }
 }
