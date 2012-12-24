@@ -34,7 +34,6 @@ DataManager * DataManager::readFile ( std::string const & dataset,
     World & world )
 {
   std::ifstream file;
-  std::vector<unsigned int> years;
   DataManager * man = NULL;
   try {
     file.open(dataset);
@@ -55,14 +54,24 @@ DataManager * DataManager::readFile ( std::string const & dataset,
   return man;
 }
 
-void DataManager::activate ()
+void DataManager::activate ( unsigned int const & dimension )
 {
+  unsigned int index = *std::find(_dim.begin(), _dim.end(), dimension);
+  for (auto & keyVal : _dataMembers)
+    keyVal.first->setHeightDistortion(keyVal.second[index]);
+}
+
+void DataManager::deactivate ()
+{
+  for (auto & keyVal : _dataMembers)
+    keyVal.first->setHeightDistortion(0);
 }
 
 HeightDataManager::HeightDataManager ( std::ifstream & dataset,
                                        World & world )
 {
   init(dataset, world);
+  normalize();
 }
 
 HeightDataManager::~HeightDataManager ()
@@ -72,7 +81,6 @@ HeightDataManager::~HeightDataManager ()
 void HeightDataManager::init ( std::ifstream & dataset, World & world )
 {
   typedef boost::tokenizer<boost::escaped_list_separator<char>> Tokenizer;
-  std::vector<unsigned int> years;
   std::string line;
   unsigned int row = 0;
   // TODO make proper error
@@ -84,13 +92,13 @@ void HeightDataManager::init ( std::ifstream & dataset, World & world )
       for (auto token : tokens) {
         std::stringstream buf(token);
         if (row == 0) {
-          years.emplace_back();
-          buf >> years.back();
+          _dim.emplace_back();
+          buf >> _dim.back();
         } else {
           if (col == 0) {
             d = world.getCountry(token);
             if (d != NULL)
-              _dataMembers[d] = std::vector<double>(years.size(), -1);
+              _dataMembers[d] = std::vector<double>(_dim.size(), 0);
             else
               throw(false);
           } else {
@@ -106,4 +114,19 @@ void HeightDataManager::init ( std::ifstream & dataset, World & world )
     std::cerr << "Country not found, exiting..." << std::endl;
     throw;
   }
+}
+
+void HeightDataManager::normalize ()
+{
+  // Find max element
+  double max = 0;
+  for (auto & keyVal : _dataMembers)
+    max = std::max(max, *std::max_element(keyVal.second.begin(),
+                                          keyVal.second.end()));
+  // Divide all by max
+  for (auto & keyVal : _dataMembers)
+    std::for_each(keyVal.second.begin(), keyVal.second.end(),
+                  [&](double & d) {
+                    d *= (Drawable::maxHeightDistortion/max);
+                  });
 }

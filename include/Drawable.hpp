@@ -43,6 +43,8 @@ class Drawable {
     void setHeightDistortion ( float const & height );
 
     std::string name;
+
+    static const unsigned int maxHeightDistortion = 60;
   protected:
   private:
     Shader *_shader;
@@ -74,8 +76,10 @@ class Polygon {
 inline void Drawable::setHeightDistortion ( float const & height )
 {
   _heightDistortion = height;
-  if (_heightDistortion > 30) _heightDistortion = 30;
-  else if (_heightDistortion < 0) _heightDistortion = 0;
+  if (_heightDistortion > maxHeightDistortion)
+    _heightDistortion = maxHeightDistortion;
+  else if
+    (_heightDistortion < 0) _heightDistortion = 0;
 }
 
 #endif

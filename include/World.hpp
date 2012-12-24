@@ -42,6 +42,8 @@ class World {
     void selectCountry (int const & x, int const & y);
     void raiseSelected ( float const & amount );
     Drawable * getCountry ( std::string const & name );
+    void activateDataset ( unsigned int const & index );
+    void deactivateDataset ( unsigned int const & index );
   protected:
   private:
     Shader *_shader;
@@ -98,6 +100,16 @@ inline DirectionalLight World::getDefaultLight ()
   d.AmbientIntensity = 0.5f;
   d.DiffuseIntensity = 0.5f;
   return d;
+}
+
+inline void World::activateDataset ( unsigned int const & index )
+{
+  _datasets[index]->activate(2012);
+}
+
+inline void World::deactivateDataset ( unsigned int const & index )
+{
+  _datasets[index]->deactivate();
 }
 
 #endif
