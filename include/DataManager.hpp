@@ -29,6 +29,7 @@ class DataManager {
     static DataManager * readFile ( std::string const & dataset,
                                     World & world );
     virtual void init ( std::ifstream & dataset, World & world ) = 0;
+    virtual void activate ();
   protected:
     std::map<Drawable *, std::vector<double>> _dataMembers;
   private:

@@ -39,44 +39,24 @@ DataManager * DataManager::readFile ( std::string const & dataset,
   try {
     file.open(dataset);
     std::string line;
-    unsigned int row = 0, col = 0;
+    unsigned int linenr = 0;
     while (std::getline(file, line)) {
       typedef boost::tokenizer<boost::escaped_list_separator<char>> Tokenizer;
       Tokenizer tok(line);
-      std::string name;
-      for (auto item : tok) {
-        std::stringstream buf(item);
-        if (row == 0) {
-          if (col == 0) {
-            if (item == "H")
-              man = new HeightDataManager(file, world);
-          // } else {
-          //   years.emplace_back();
-          //   buf >> years.back();
-          }
-        // } else {
-        //   if (col == 0) {
-        //     std::getline(buf, name);
-        //     d = world.getCountry(name);
-        //     if (d != NULL)
-        //       _dataMembers[d] = std::vector<double>(years.size(), -1);
-        //   } else {
-        //     if (d != NULL)
-        //       buf >> _dataMembers[d][col-1];
-        //     else
-        //       std::cout << "Something went wrong for " << name << std::endl;
-        //   }
-        }
-        col++;
+      if (line[1] == 'H' && linenr == 0) {
+        man = new HeightDataManager(file, world);
       }
-      col = 0;
-      row++;
+      linenr++;
     }
   }
   catch (std::ifstream::failure & e) {
     std::cerr << "exception opening file " << e.what() << std::endl;
   }
   return man;
+}
+
+void DataManager::activate ()
+{
 }
 
 HeightDataManager::HeightDataManager ( std::ifstream & dataset,
