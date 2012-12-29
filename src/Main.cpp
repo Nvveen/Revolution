@@ -30,7 +30,7 @@ void loop ( Screen & sc )
   std::cout << " - leaving main loop" << std::endl;
 }
  
-int main ()
+int main (int argc, char *argv[])
 {
 #ifndef NOCEGUI
   std::cout << " - starting CEGUI" << std::endl;

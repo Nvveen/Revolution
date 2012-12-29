@@ -14,6 +14,9 @@
 // Revolution. If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 #include "Camera.hpp"
+#include <boost/math/constants/constants.hpp>
+
+#define pi boost::math::constants::pi<double>();
 
 Camera::Camera ( unsigned int const & width, unsigned int const & height )
 {
@@ -23,7 +26,7 @@ Camera::Camera ( unsigned int const & width, unsigned int const & height )
   _up = glm::vec3(0.0, 1.0f, 0.0f);
 
   _horizontalAngle = 0.0f;
-  _verticalAngle = -45.0f/360.0f * M_PI;
+  _verticalAngle = -45.0f/360.0f * pi;
   _target = getDirection();
 }
 

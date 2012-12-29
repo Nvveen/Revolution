@@ -49,8 +49,8 @@ class World {
     Shader *_shader;
     Camera *_cam;
     DirectionalLight *_dLight0;
-    int _show = 0;
-    int _maxDrawable = 0;
+    int _show;
+    int _maxDrawable;
     std::vector<Drawable *> _drawables;
     Drawable *_selected;
 

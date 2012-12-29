@@ -24,6 +24,8 @@
 
 World::World(const unsigned int & width, const unsigned int & height)
 {
+  _show = 0;
+  _maxDrawable = 0;
   _cam = new Camera(width, height);
   _dLight0 = new DirectionalLight;
   *_dLight0 = getDefaultLight();
