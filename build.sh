@@ -68,9 +68,9 @@ function build() {
   fi
   cmake ${CMAKE_OPTION} ..;
   if $VERBOSE; then
-    make VERBOSE=1;
+    make VERBOSE=1 -j4;
   else
-    make;
+    make -j4;
   fi
   make install;
 }

@@ -38,7 +38,6 @@ void Camera::move ( float const & dX, float const & dY, float const & dZ )
     dY * _up + dZ * forward;
   _pos += translation;
   _target += translation;
-  std::cout << _pos[0] << " " << _pos[1] << " " << _pos[2] << std::endl;
 }
 
 void Camera::look ( float const & refX, float const & refY, float const & i,
@@ -49,5 +48,4 @@ void Camera::look ( float const & refX, float const & refY, float const & i,
   _verticalAngle += mouseSpeed * (refY-j);
   glm::vec3 forward = getDirection();
   _target = _pos + forward;
-  std::cout << _horizontalAngle << ", " << _verticalAngle << std::endl;
 }

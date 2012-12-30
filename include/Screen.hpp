@@ -55,13 +55,20 @@ class Screen {
 
     // CEGUI stuff
 #ifndef NOCEGUI
-    CEGUI::WindowManager *_winManager;
-    CEGUI::WindowManager *initCEGUI();
+    void initCEGUI();
 #endif
 };
 
 inline bool Screen::isOpened() {
   return _alive;
 }
+
+class ComboxTextItem : public CEGUI::ListboxTextItem {
+  public:
+    ComboxTextItem(CEGUI::String const & str) : CEGUI::ListboxTextItem(str) {
+      setSelectionBrushImage("TaharezLook", "MultiListSelectionBrush");
+      setTextColours(0xFFFFFFFF);
+    }
+};
 
 #endif

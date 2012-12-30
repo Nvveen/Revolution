@@ -131,6 +131,7 @@ void World::init ()
               ind.push_back(vec);
             }
             country->addPolygon(vert, ind);
+            regionFile.close();
           }
         }
       } else {
@@ -148,6 +149,7 @@ void World::init ()
   _maxDrawable = _drawables.size();
   std::cout << "Loading datasets... " << std::endl;
   readDatasets();
+  _shader->unbind();
 }
 
 void World::draw()
@@ -167,6 +169,8 @@ void World::draw()
       p->draw(_cam);
     i++;
   }
+  glDisable(GL_STENCIL_TEST);
+  _shader->unbind();
 }
 
 void World::selectCountry (int const & x, int const & y)

@@ -26,35 +26,33 @@ std::string CEGUIInstallBasePath;
 Screen::Screen( const unsigned int & width, const unsigned int & height ) :
   _w(width), _h(height), _alive(true) {
 #ifndef NOCEGUI
-  CEGUIInstallBasePath = getPath() + "/";
+  CEGUIInstallBasePath = getPath();
 #endif
   _surface = initSDL();
 #ifndef NOCEGUI
-  _winManager = initCEGUI();
+  initCEGUI();
 #endif
-  _lookAround = false;
   createGUI();
+  _lookAround = false;
   lastTimePulse = 0.001 * static_cast<double>(SDL_GetTicks());
 }
 
 Screen::~Screen() {
   std::cout << "Cleaning up the screen..." << std::endl;
   delete _world;
-#ifndef NOCEGUI
-  delete _winManager;
-#endif
   SDL_FreeSurface(_surface);
 }
 
 #ifndef NOCEGUI
-CEGUI::WindowManager *Screen::initCEGUI() {
+void Screen::initCEGUI()
+{
   std::cout << " - initializing CEGUI" << std::endl;
   CEGUI::OpenGLRenderer::bootstrapSystem();
   this->setCEGUIPaths();
   CEGUI::SchemeManager::getSingleton().create("TaharezLook.scheme");
+  CEGUI::System::getSingleton().setDefaultFont("DejaVuSans-10");
   CEGUI::System::getSingleton().setDefaultMouseCursor( "TaharezLook",
       "MouseArrow");
-  return &(CEGUI::WindowManager::getSingleton());
 }
 #endif
  
@@ -81,11 +79,13 @@ SDL_Surface *Screen::initSDL() {
 #endif
   SDL_EnableUNICODE(1);
   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
+  SDL_ShowCursor(SDL_DISABLE);
 
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
+  glDisable(GL_FOG);
+  glClearColor(0, 0, 0.3, 1);
   glClearStencil(0);
-  // glDisable(GL_CULL_FACE);
   glFrontFace(GL_CCW);
 
   return screen;
@@ -96,13 +96,21 @@ void Screen::clear() {
 }
  
 void Screen::render() {
-  // Render the world
-  _world->draw();
   injectInput();
   injectTimePulse(lastTimePulse);
+  // Render the world
+  _world->draw();
 #ifndef NOCEGUI
+  glUseProgram(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_CULL_FACE);
   // Renders the GUI:
   CEGUI::System::getSingleton().renderGUI();
+  glEnable(GL_CULL_FACE);
+  glEnable(GL_DEPTH_TEST);
 #endif
   // Updates the screen:
   SDL_GL_SwapBuffers();
@@ -188,6 +196,7 @@ void Screen::setCEGUIPaths() {
 	CEGUI::DefaultResourceProvider & defaultResProvider =
     *static_cast<CEGUI::DefaultResourceProvider*>(
         CEGUI::System::getSingleton().getResourceProvider());
+  CEGUIInstallBasePath = "/home/neal/shared/college/hci/code/";
 	const std::string CEGUIInstallSharePath = CEGUIInstallBasePath
 	  + "share/";
 	// For each resource type, sets a corresponding resource group directory:
@@ -219,7 +228,7 @@ void Screen::setCEGUIPaths() {
 	CEGUI::AnimationManager::setDefaultResourceGroup("animations");
  
 	// Set-up default group for validation schemas:
-	CEGUI::XMLParser * parser = CEGUI::System::getSingleton().getXMLParser();
+	CEGUI::XMLParser *parser = CEGUI::System::getSingleton().getXMLParser();
 	if ( parser->isPropertyPresent("SchemaDefaultResourceGroup"))
 		parser->setProperty("SchemaDefaultResourceGroup", "schemas");
 }
@@ -227,7 +236,22 @@ void Screen::setCEGUIPaths() {
  
 void Screen::createGUI() {
   std::cout << "Creating the GUI..." << std::endl;
-  _world = new World(_w, _h);
+  try {
+#ifndef NOCEGUI
+    CEGUI::WindowManager & wm = CEGUI::WindowManager::getSingleton();
+    CEGUI::System & sys = CEGUI::System::getSingleton();
+    CEGUI::Window *root = wm.createWindow("DefaultWindow", "_MasterRoot");
+    sys.setGUISheet(root);
+    CEGUI::Window *sheet = wm.loadWindowLayout("TaharezRevolution.layout");
+    sys.getGUISheet()->addChildWindow(sheet);
+#endif
+    _world = new World(_w, _h);
+  }
+#ifndef NOCEGUI
+  catch (CEGUI::Exception & e) {
+    std::cerr << "CEGUI Exception: " << e.getMessage() << std::endl;
+  }
+#endif
 }
 
 void Screen::handleMouseDown( Uint8 button, const int & x, const int & y ) {
@@ -301,7 +325,9 @@ std::string Screen::getPath() {
   int max = 256;
   char temp[max];
   std::string str = (getcwd(temp, max) ? std::string(temp) : std::string(""));
-  chdir(str.c_str());
+  if (!chdir(str.c_str())) {
+    return "";
+  }
   return str;
 }
 
