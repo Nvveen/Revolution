@@ -12,6 +12,7 @@ set(revolution_SRCS
   ${SRC_DIR}/Camera.cpp
   ${SRC_DIR}/DataManager.cpp
   ${SRC_DIR}/Drawable.cpp
+  ${SRC_DIR}/GUIManager.cpp
   ${SRC_DIR}/Main.cpp
   ${SRC_DIR}/Screen.cpp
   ${SRC_DIR}/Shader.cpp

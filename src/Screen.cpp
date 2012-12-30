@@ -96,10 +96,11 @@ void Screen::clear() {
 }
  
 void Screen::render() {
-  injectInput();
-  injectTimePulse(lastTimePulse);
   // Render the world
   _world->draw();
+  // Get input
+  injectInput();
+  injectTimePulse(lastTimePulse);
 #ifndef NOCEGUI
   glUseProgram(0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
