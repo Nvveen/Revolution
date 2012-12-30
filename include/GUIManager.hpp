@@ -15,12 +15,21 @@
 #ifndef GUIMANAGER_HPP
 #define GUIMANAGER_HPP
 
+#include <string>
+
 class GUIManager {
   public:
     GUIManager ();
     virtual ~GUIManager ();
+
+    void renderGUI ();
   protected:
   private:
+    void init ();
+    void setCEGUIPaths ();
+    void createGUI ();
+
+    std::string CEGUIInstallBasePath;
 };
 
 #endif
