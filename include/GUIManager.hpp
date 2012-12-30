@@ -22,7 +22,7 @@ class GUIManager {
     GUIManager ();
     virtual ~GUIManager ();
 
-    void renderGUI ();
+    void render ();
   protected:
   private:
     void init ();

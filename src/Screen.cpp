@@ -15,23 +15,14 @@
 #include "Screen.hpp"
 #include <iostream>
 #ifndef NOCEGUI
-#include <CEGUI/RendererModules/OpenGL/CEGUIOpenGLRenderer.h>
+#include <CEGUI/CEGUI.h>
 #endif
 #include <unistd.h>
 
-#ifndef NOCEGUI
-std::string CEGUIInstallBasePath;
-#endif
 
 Screen::Screen( const unsigned int & width, const unsigned int & height ) :
   _w(width), _h(height), _alive(true) {
-#ifndef NOCEGUI
-  CEGUIInstallBasePath = getPath();
-#endif
   _surface = initSDL();
-#ifndef NOCEGUI
-  initCEGUI();
-#endif
   createGUI();
   _lookAround = false;
   lastTimePulse = 0.001 * static_cast<double>(SDL_GetTicks());
@@ -42,19 +33,6 @@ Screen::~Screen() {
   delete _world;
   SDL_FreeSurface(_surface);
 }
-
-#ifndef NOCEGUI
-void Screen::initCEGUI()
-{
-  std::cout << " - initializing CEGUI" << std::endl;
-  CEGUI::OpenGLRenderer::bootstrapSystem();
-  this->setCEGUIPaths();
-  CEGUI::SchemeManager::getSingleton().create("TaharezLook.scheme");
-  CEGUI::System::getSingleton().setDefaultFont("DejaVuSans-10");
-  CEGUI::System::getSingleton().setDefaultMouseCursor( "TaharezLook",
-      "MouseArrow");
-}
-#endif
  
 SDL_Surface *Screen::initSDL() {
   std::cout << "initializing SDL" << std::endl;
@@ -90,6 +68,17 @@ SDL_Surface *Screen::initSDL() {
 
   return screen;
 }
+ 
+void Screen::createGUI() {
+  std::cout << "Creating the GUI..." << std::endl;
+  try {
+    _gui = new GUIManager;
+    _world = new World(_w, _h);
+  }
+  // TODO GUIManager exception
+  catch (...) {
+  }
+}
 
 void Screen::clear() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -101,18 +90,7 @@ void Screen::render() {
   // Get input
   injectInput();
   injectTimePulse(lastTimePulse);
-#ifndef NOCEGUI
-  glUseProgram(0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-  glBindVertexArray(0);
-  glDisable(GL_DEPTH_TEST);
-  glDisable(GL_CULL_FACE);
-  // Renders the GUI:
-  CEGUI::System::getSingleton().renderGUI();
-  glEnable(GL_CULL_FACE);
-  glEnable(GL_DEPTH_TEST);
-#endif
+  _gui->render();
   // Updates the screen:
   SDL_GL_SwapBuffers();
 }
@@ -190,70 +168,6 @@ void Screen::injectTimePulse ( double & ltp )
 #endif
   ltp = current;
 }
- 
-#ifndef NOCEGUI
-void Screen::setCEGUIPaths() {
-	// Initialises the required directories for the DefaultResourceProvider:
-	CEGUI::DefaultResourceProvider & defaultResProvider =
-    *static_cast<CEGUI::DefaultResourceProvider*>(
-        CEGUI::System::getSingleton().getResourceProvider());
-  CEGUIInstallBasePath = "/home/neal/shared/college/hci/code/";
-	const std::string CEGUIInstallSharePath = CEGUIInstallBasePath
-	  + "share/";
-	// For each resource type, sets a corresponding resource group directory:
-	std::cout << "Using scheme directory '" << CEGUIInstallSharePath + "schemes/"
-		 << "'" << std::endl;
-	defaultResProvider.setResourceGroupDirectory("schemes",
-	  CEGUIInstallSharePath + "schemes/");
-	defaultResProvider.setResourceGroupDirectory("imagesets",
-	  CEGUIInstallSharePath + "imagesets/");
-	defaultResProvider.setResourceGroupDirectory("fonts",
-	  CEGUIInstallSharePath + "fonts/");
-	defaultResProvider.setResourceGroupDirectory("layouts",
-	  CEGUIInstallSharePath + "layouts/");
-	defaultResProvider.setResourceGroupDirectory("looknfeels",
-	  CEGUIInstallSharePath + "looknfeel/");
-	defaultResProvider.setResourceGroupDirectory("lua_scripts",
-	  CEGUIInstallSharePath + "lua_scripts/");
-	defaultResProvider.setResourceGroupDirectory("schemas",
-	  CEGUIInstallSharePath + "xml_schemas/");
-	defaultResProvider.setResourceGroupDirectory("animations",
-	  CEGUIInstallSharePath + "animations/");
-	// Sets the default resource groups to be used:
-	CEGUI::Imageset::setDefaultResourceGroup("imagesets");
-	CEGUI::Font::setDefaultResourceGroup("fonts");
-	CEGUI::Scheme::setDefaultResourceGroup("schemes");
-	CEGUI::WidgetLookManager::setDefaultResourceGroup("looknfeels");
-	CEGUI::WindowManager::setDefaultResourceGroup( "layouts");
-	CEGUI::ScriptModule::setDefaultResourceGroup("lua_scripts");
-	CEGUI::AnimationManager::setDefaultResourceGroup("animations");
- 
-	// Set-up default group for validation schemas:
-	CEGUI::XMLParser *parser = CEGUI::System::getSingleton().getXMLParser();
-	if ( parser->isPropertyPresent("SchemaDefaultResourceGroup"))
-		parser->setProperty("SchemaDefaultResourceGroup", "schemas");
-}
-#endif
- 
-void Screen::createGUI() {
-  std::cout << "Creating the GUI..." << std::endl;
-  try {
-#ifndef NOCEGUI
-    CEGUI::WindowManager & wm = CEGUI::WindowManager::getSingleton();
-    CEGUI::System & sys = CEGUI::System::getSingleton();
-    CEGUI::Window *root = wm.createWindow("DefaultWindow", "_MasterRoot");
-    sys.setGUISheet(root);
-    CEGUI::Window *sheet = wm.loadWindowLayout("TaharezRevolution.layout");
-    sys.getGUISheet()->addChildWindow(sheet);
-#endif
-    _world = new World(_w, _h);
-  }
-#ifndef NOCEGUI
-  catch (CEGUI::Exception & e) {
-    std::cerr << "CEGUI Exception: " << e.getMessage() << std::endl;
-  }
-#endif
-}
 
 void Screen::handleMouseDown( Uint8 button, const int & x, const int & y ) {
   switch ( button ) {
@@ -320,16 +234,6 @@ void Screen::handleMouseUp( Uint8 button ) {
     break;
   }
  
-}
-
-std::string Screen::getPath() {
-  int max = 256;
-  char temp[max];
-  std::string str = (getcwd(temp, max) ? std::string(temp) : std::string(""));
-  if (!chdir(str.c_str())) {
-    return "";
-  }
-  return str;
 }
 
 void Screen::executeInput( const SDLKey & key ) {

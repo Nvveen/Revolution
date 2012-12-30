@@ -41,7 +41,7 @@ void GUIManager::init ()
   createGUI();
 }
 
-void GUIManager::renderGUI ()
+void GUIManager::render ()
 {
   glUseProgram(0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
