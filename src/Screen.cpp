@@ -75,7 +75,9 @@ void Screen::createGUI() {
     _gui = new GUIManager;
     _world = new World(_w, _h);
   }
-  // TODO GUIManager exception
+  catch (GUIManagerException & e) {
+    std::cerr << "Error: " << e.what() << std::endl;
+  }
   catch (...) {
   }
 }

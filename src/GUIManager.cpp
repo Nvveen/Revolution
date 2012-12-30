@@ -111,7 +111,7 @@ void GUIManager::createGUI ()
 #ifndef NOCEGUI
   catch (CEGUI::Exception & e) {
     std::cerr << "CEGUI Exception: " << e.getMessage() << std::endl;
-    // TODO throw custom exception to pass to screen.
+    throw(e.getMessage());
   }
 #endif
 }

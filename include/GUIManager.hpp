@@ -16,6 +16,7 @@
 #define GUIMANAGER_HPP
 
 #include <string>
+#include <stdexcept>
 
 class GUIManager {
   public:
@@ -30,6 +31,13 @@ class GUIManager {
     void createGUI ();
 
     std::string CEGUIInstallBasePath;
+};
+
+class GUIManagerException : public std::runtime_error {
+  public:
+    GUIManagerException ( std::string const& msg ) :
+      std::runtime_error("GUIException: "+msg) {};
+    virtual ~GUIManagerException () throw() {};
 };
 
 #endif
