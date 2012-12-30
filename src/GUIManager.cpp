@@ -14,7 +14,6 @@
 // Revolution. If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 #include <GL/glew.h>
-#include <CEGUI/CEGUI.h>
 #include <CEGUI/RendererModules/OpenGL/CEGUIOpenGLRenderer.h>
 #include "GUIManager.hpp"
 
@@ -101,17 +100,35 @@ void GUIManager::createGUI ()
 {
   std::cout << "Creating the GUI..." << std::endl;
   try {
-    CEGUI::WindowManager & wm = CEGUI::WindowManager::getSingleton();
-    CEGUI::System & sys = CEGUI::System::getSingleton();
-    CEGUI::Window *root = wm.createWindow("DefaultWindow", "_MasterRoot");
+    using namespace CEGUI;
+    WindowManager & wm = WindowManager::getSingleton();
+    System & sys = System::getSingleton();
+    Window *root = wm.createWindow("DefaultWindow", "_MasterRoot");
     sys.setGUISheet(root);
-    CEGUI::Window *sheet = wm.loadWindowLayout("TaharezRevolution.layout");
+    Window *sheet = wm.loadWindowLayout("TaharezRevolution.layout");
     sys.getGUISheet()->addChildWindow(sheet);
+
+    // Add default empty item to datalist.
+    Combobox *combox = static_cast<Combobox *>(wm.getWindow("Sheet/DataList"));
+    ListItem *item = new ListItem("No dataset");
+    item->setSelected(true);
+    combox->addItem(item);
+    combox->setText(item->getText());
   }
-#ifndef NOCEGUI
-  catch (CEGUI::Exception & e) {
+  catch (CEGUI::Exception & e ) {
     std::cerr << "CEGUI Exception: " << e.getMessage() << std::endl;
     throw(e.getMessage());
   }
-#endif
+}
+
+void GUIManager::populateDataList ( std::vector<DataManager *> const & list )
+{
+  CEGUI::Combobox *combox = static_cast<CEGUI::Combobox *>(
+      CEGUI::WindowManager::getSingleton().getWindow("Sheet/DataList"));
+  unsigned int i = 0;
+  for (DataManager *p : list ) {
+    std::string name = "Test";
+    combox->addItem(new ListItem(name, i));
+    i++;
+  }
 }

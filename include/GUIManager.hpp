@@ -17,6 +17,9 @@
 
 #include <string>
 #include <stdexcept>
+#include <CEGUI/CEGUI.h>
+#include <vector>
+#include "DataManager.hpp"
 
 class GUIManager {
   public:
@@ -24,20 +27,31 @@ class GUIManager {
     virtual ~GUIManager ();
 
     void render ();
+    void populateDataList ( std::vector<DataManager *> const & list );
   protected:
   private:
     void init ();
     void setCEGUIPaths ();
     void createGUI ();
+    void setEventHandles ();
 
     std::string CEGUIInstallBasePath;
 };
 
 class GUIManagerException : public std::runtime_error {
   public:
-    GUIManagerException ( std::string const& msg ) :
+    GUIManagerException ( std::string const & msg ) :
       std::runtime_error("GUIException: "+msg) {};
     virtual ~GUIManagerException () throw() {};
+};
+
+class ListItem : public CEGUI::ListboxTextItem {
+  friend class GUIManager;
+  private:
+    ListItem ( std::string const & text, int const & id = 0 ) :
+      CEGUI::ListboxTextItem(text, id) {
+      this->setSelectionBrushImage("TaharezLook", "MultiListSelectionBrush");
+    };
 };
 
 #endif

@@ -44,6 +44,8 @@ class World {
     Drawable * getCountry ( std::string const & name );
     void activateDataset ( unsigned int const & index );
     void deactivateDataset ( unsigned int const & index );
+
+    std::vector<DataManager *> getDatasets ();
   protected:
   private:
     Shader *_shader;
@@ -110,6 +112,11 @@ inline void World::activateDataset ( unsigned int const & index )
 inline void World::deactivateDataset ( unsigned int const & index )
 {
   _datasets[index]->deactivate();
+}
+
+inline std::vector<DataManager *> World::getDatasets ()
+{
+  return _datasets;
 }
 
 #endif
