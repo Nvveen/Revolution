@@ -183,14 +183,6 @@ void World::selectCountry (int const & x, int const & y)
   }
 }
 
-void World::raiseSelected(float const & amount)
-{
-  if (_selected != NULL) {
-    std::cout << "Raising " << _selected->name << " by " << amount << std::endl;
-    _selected->setHeightDistortion(amount);
-  }
-}
-
 void World::readDatasets ()
 {
   namespace bfs = boost::filesystem;

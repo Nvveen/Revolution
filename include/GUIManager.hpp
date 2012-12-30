@@ -33,7 +33,6 @@ class GUIManager {
     void init ();
     void setCEGUIPaths ();
     void createGUI ();
-    void setEventHandles ();
 
     std::string CEGUIInstallBasePath;
 };
@@ -45,6 +44,13 @@ class GUIManagerException : public std::runtime_error {
     virtual ~GUIManagerException () throw() {};
 };
 
+class ComboBox : public CEGUI::Combobox {
+  friend class GUIManager;
+  private:
+    void subscribe ();
+    bool setSelection ( CEGUI::EventArgs const & e );
+};
+
 class ListItem : public CEGUI::ListboxTextItem {
   friend class GUIManager;
   private:
@@ -52,6 +58,7 @@ class ListItem : public CEGUI::ListboxTextItem {
       CEGUI::ListboxTextItem(text, id) {
       this->setSelectionBrushImage("TaharezLook", "MultiListSelectionBrush");
     };
+    virtual ~ListItem () {};
 };
 
 #endif

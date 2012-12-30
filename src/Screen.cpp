@@ -263,12 +263,6 @@ void Screen::executeInput( const SDLKey & key ) {
     case SDLK_x:
       _world->getCamera().move(0.0f, -3.0f, 0.0f);
       break;
-    case SDLK_1:
-      _world->activateDataset(0);
-      break;
-    case SDLK_4:
-      _world->deactivateDataset(0);
-      break;
     default:
       break;
   }

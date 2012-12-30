@@ -109,11 +109,12 @@ void GUIManager::createGUI ()
     sys.getGUISheet()->addChildWindow(sheet);
 
     // Add default empty item to datalist.
-    Combobox *combox = static_cast<Combobox *>(wm.getWindow("Sheet/DataList"));
+    ComboBox *combox = static_cast<ComboBox *>(wm.getWindow("Sheet/DataList"));
     ListItem *item = new ListItem("No dataset");
     item->setSelected(true);
     combox->addItem(item);
     combox->setText(item->getText());
+    combox->subscribe();
   }
   catch (CEGUI::Exception & e ) {
     std::cerr << "CEGUI Exception: " << e.getMessage() << std::endl;
@@ -123,12 +124,31 @@ void GUIManager::createGUI ()
 
 void GUIManager::populateDataList ( std::vector<DataManager *> const & list )
 {
-  CEGUI::Combobox *combox = static_cast<CEGUI::Combobox *>(
+  ComboBox *combox = static_cast<ComboBox *>(
       CEGUI::WindowManager::getSingleton().getWindow("Sheet/DataList"));
-  unsigned int i = 0;
+  unsigned int i = 1;
   for (DataManager *p : list ) {
-    std::string name = "Test";
-    combox->addItem(new ListItem(name, i));
+    ListItem *item = new ListItem(p->name, i);
+    combox->addItem(item);
+    item->setUserData(p);
     i++;
+  }
+}
+
+void ComboBox::subscribe ()
+{
+  this->subscribeEvent(CEGUI::Combobox::EventListSelectionAccepted,
+      CEGUI::Event::Subscriber(&ComboBox::setSelection, this));
+}
+
+bool ComboBox::setSelection ( CEGUI::EventArgs const & e )
+{
+  ComboBox *combox = static_cast<ComboBox *>(
+      CEGUI::WindowManager::getSingleton().getWindow("Sheet/DataList"));
+  ListItem *item = static_cast<ListItem *>(combox->getSelectedItem());
+  if (item->getID() == 0) {
+  } else {
+    DataManager *dm = static_cast<DataManager *>(item->getUserData());
+    dm->activate(2012);
   }
 }

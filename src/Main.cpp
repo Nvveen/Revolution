@@ -32,6 +32,8 @@ void loop ( Screen & sc )
  
 int main (int argc, char *argv[])
 {
+  // TODO remove this
+  std::cout << argc << argv[0] << std::endl;
 #ifndef NOCEGUI
   std::cout << " - starting CEGUI" << std::endl;
 #endif

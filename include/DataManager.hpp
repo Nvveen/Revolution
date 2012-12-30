@@ -17,9 +17,14 @@
 
 #include <string>
 #include <fstream>
+#include <stdexcept>
 #include "Drawable.hpp"
 
 class World;
+
+enum DataManagerType {
+  DM_Height,
+};
 
 class DataManager {
   public:
@@ -30,12 +35,15 @@ class DataManager {
                                     World & world );
     virtual void activate ( unsigned int const & dimension );
     virtual void deactivate ();
+
+    std::string name;
   protected:
     virtual void init ( std::ifstream & dataset, World & world ) = 0;
 
     std::map<Drawable *, std::vector<double>> _dataMembers;
     std::vector<unsigned int> _dim;
   private:
+    DataManagerType type;
 };
 
 class HeightDataManager : public DataManager {
@@ -46,6 +54,14 @@ class HeightDataManager : public DataManager {
     virtual void init ( std::ifstream & dataset, World & world );
     virtual void normalize ();
   private:
+};
+
+class DataManagerException : public std::runtime_error {
+  public:
+    DataManagerException ( std::string const & text ) :
+      std::runtime_error("Data Manager error: "+text) {
+    };
+    virtual ~DataManagerException () throw() {};
 };
 
 #endif

@@ -38,24 +38,42 @@ DataManager * DataManager::readFile ( std::string const & dataset,
   try {
     file.open(dataset);
     std::string line;
-    unsigned int linenr = 0;
-    while (std::getline(file, line)) {
-      typedef boost::tokenizer<boost::escaped_list_separator<char>> Tokenizer;
-      Tokenizer tok(line);
-      if (line[1] == 'H' && linenr == 0) {
-        man = new HeightDataManager(file, world);
+    getline(file, line);
+    boost::tokenizer<boost::escaped_list_separator<char>> tok(line);
+    boost::char_separator<char> sep("|");
+    boost::tokenizer<boost::char_separator<char>> strTok(*tok.begin(), sep);
+    auto it = strTok.begin();
+    std::string name = *it; ++it;
+    std::string type = *it;
+    if (type.size() != 1) {
+      throw (DataManagerException("wrong token defined"));
+    } else {
+      switch (type[0]) {
+        case 'H':
+          man = new HeightDataManager(file, world);
+          man->type = DM_Height;
+          break;
+        default:
+          throw (DataManagerException("wrong dataset type defined"));
       }
-      linenr++;
     }
+    if (man != NULL)
+      man->name = name;
+    std::cout << "Loaded dataset " << man->name << std::endl;
   }
   catch (std::ifstream::failure & e) {
-    std::cerr << "exception opening file " << e.what() << std::endl;
+    std::cerr << "Error opening file " << e.what() << std::endl;
+  }
+  catch (DataManagerException & e ) {
+    std::cerr << e.what() << std::endl;
   }
   return man;
 }
 
 void DataManager::activate ( unsigned int const & dimension )
 {
+  std::cout << "Activating " << name << " in dimension " << dimension;
+  std::cout << std::endl;
   unsigned int index = *std::find(_dim.begin(), _dim.end(), dimension);
   for (auto & keyVal : _dataMembers)
     keyVal.first->setHeightDistortion(keyVal.second[index]);
