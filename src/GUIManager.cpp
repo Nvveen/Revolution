@@ -117,29 +117,22 @@ void GUIManager::createGUI ()
 void GUIManager::populateDatalists ( std::vector<DataManager *> const & list )
 {
   CEGUI::WindowManager & wm = CEGUI::WindowManager::getSingleton();
-  CEGUI::Listbox *HLb = static_cast<CEGUI::Listbox *>(
-      wm.getWindow("Sheet/DatasetFrame/TabControl/HTab/Listbox"));
-  CEGUI::Listbox *PLb = static_cast<CEGUI::Listbox *>(
-      wm.getWindow("Sheet/DatasetFrame/TabControl/PTab/Listbox"));
-  CEGUI::Listbox *CLb = static_cast<CEGUI::Listbox *>(
-      wm.getWindow("Sheet/DatasetFrame/TabControl/CTab/Listbox"));
-  for (DataManager *p : list) {
-    ListboxItem *item = new ListboxItem(p->name);
-    item->setUserData(p);
-    switch (p->type) {
-      case DM_Height:
-        HLb->addItem(item);
-        break;
-      case DM_Pattern:
-        PLb->addItem(item);
-        break;
-      case DM_Color:
-        CLb->addItem(item);
-        break;
-      default:
-        break;
-    }
-  }
+  auto populate = [&]( std::string const & name,
+      DataManagerType const & type ) {
+    CEGUI::Listbox *lb = static_cast<CEGUI::Listbox *>(
+        wm.getWindow("Sheet/DatasetFrame/TabControl/"+name+"/Listbox"));
+    CEGUI::Slider *slider = static_cast<CEGUI::Slider *>(
+        wm.getWindow("Sheet/DatasetFrame/TabControl/"+name+"/Slider"));
+    for (DataManager *p : list)
+      if (p->type == type) {
+        ListboxItem *item = new ListboxItem(p->name);
+        item->setUserData(p);
+        lb->addItem(item);
+      }
+  };
+  populate("HTab", DM_Height);
+  populate("PTab", DM_Pattern);
+  populate("CTab", DM_Color);
 }
 
 void GUIManager::setHandlers ()
