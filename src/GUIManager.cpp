@@ -106,30 +106,63 @@ void GUIManager::createGUI ()
     sys.setGUISheet(root);
     CEGUI::Window *sheet = wm.loadWindowLayout("TaharezRevolution.layout");
     sys.getGUISheet()->addChildWindow(sheet);
-
-    CEGUI::FrameWindow *dsFrame = static_cast<CEGUI::FrameWindow *>(
-        wm.getWindow("Sheet/DatasetFrame"));
-    // dsFrame->setProperty("Visible", "False");
-    // Add tabs
-    CEGUI::TabControl *tc = static_cast<CEGUI::TabControl *>(
-        wm.getWindow("Sheet/DatasetFrame/TabControl"));
-    DatasetPane *tab = static_cast<DatasetPane *>(wm.createWindow(
-          "TaharezLook/TabContentPane", "HTab"));
-    tab->init("Height datasets");
-    // Add tab to frame
-    tc->addTab(tab);
-    // Handle behavior of options-button
-    CEGUI::Window *button = wm.getWindow("Sheet/Options");
-    button->subscribeEvent(CEGUI::PushButton::EventClicked,
-        CEGUI::Event::Subscriber(&GUIManager::handleOptionsVisibility, this));
-    button = static_cast<CEGUI::Window *>(dsFrame->getCloseButton());
-    button->subscribeEvent(CEGUI::PushButton::EventClicked,
-        CEGUI::Event::Subscriber(&GUIManager::handleOptionsVisibility, this));
+    setHandlers();
   }
   catch (CEGUI::Exception & e ) {
     std::cerr << "CEGUI Exception: " << e.getMessage() << std::endl;
     throw(e.getMessage());
   }
+}
+
+void GUIManager::populateDatalists ( std::vector<DataManager *> const & list )
+{
+  CEGUI::WindowManager & wm = CEGUI::WindowManager::getSingleton();
+  CEGUI::Listbox *HLb = static_cast<CEGUI::Listbox *>(
+      wm.getWindow("Sheet/DatasetFrame/TabControl/HTab/Listbox"));
+  CEGUI::Listbox *PLb = static_cast<CEGUI::Listbox *>(
+      wm.getWindow("Sheet/DatasetFrame/TabControl/PTab/Listbox"));
+  CEGUI::Listbox *CLb = static_cast<CEGUI::Listbox *>(
+      wm.getWindow("Sheet/DatasetFrame/TabControl/CTab/Listbox"));
+  for (DataManager *p : list) {
+    ListboxItem *item = new ListboxItem(p->name);
+    item->setUserData(p);
+    switch (p->type) {
+      case DM_Height:
+        HLb->addItem(item);
+        break;
+      case DM_Pattern:
+        PLb->addItem(item);
+        break;
+      case DM_Color:
+        CLb->addItem(item);
+        break;
+      default:
+        break;
+    }
+  }
+}
+
+void GUIManager::setHandlers ()
+{
+  CEGUI::WindowManager & wm = CEGUI::WindowManager::getSingleton();
+
+  CEGUI::FrameWindow *dsFrame = static_cast<CEGUI::FrameWindow *>(
+      wm.getWindow("Sheet/DatasetFrame"));
+  // dsFrame->setProperty("Visible", "False");
+  // Handle behavior of options-button
+  CEGUI::PushButton *button = static_cast<CEGUI::PushButton *>(
+      wm.getWindow("Sheet/Options"));
+  button->subscribeEvent(CEGUI::PushButton::EventClicked,
+      CEGUI::Event::Subscriber(&GUIManager::handleOptionsVisibility, this));
+  button = dsFrame->getCloseButton();
+  button->subscribeEvent(CEGUI::PushButton::EventClicked,
+      CEGUI::Event::Subscriber(&GUIManager::handleOptionsVisibility, this));
+  // TODO connect activate buttons per tab
+  CEGUI::Window *tab =  wm.getWindow("Sheet/DatasetFrame/TabControl/HTab");
+  button = static_cast<CEGUI::PushButton *>(
+      tab->getChild(3));
+  button->subscribeEvent(CEGUI::PushButton::EventClicked,
+      CEGUI::Event::Subscriber(&GUIManager::handleDSActivation, this));
 }
 
 bool GUIManager::handleOptionsVisibility ( CEGUI::EventArgs const & )
@@ -144,21 +177,15 @@ bool GUIManager::handleOptionsVisibility ( CEGUI::EventArgs const & )
   return true;
 }
 
-void DatasetPane::init ( std::string const & name )
+bool GUIManager::handleDSActivation ( CEGUI::EventArgs const & e )
 {
-  CEGUI::WindowManager & wm = CEGUI::WindowManager::getSingleton();
-  this->setProperty("Text", name);
-  // Create list of datasets
-  CEGUI::Listbox *lb = static_cast<CEGUI::Listbox *>(
-      wm.createWindow("TaharezLook/Listbox", getName()+"/Listbox"));
-  lb->setProperty("UnifiedAreaRect", "{{0,10},{0,10},{1,-10},{0.6,0}}");
-  lb->addItem(new ListboxItem("Test 1"));
-  CEGUI::Window *activateButton = wm.createWindow(
-      "TaharezLook/Button", getName()+"/Activate");
-  activateButton->setProperty("UnifiedAreaRect",
-      "{{0,10},{0.6,10},{0.2,10},{0.67,10}}");
-  activateButton->setProperty("Text", "Activate");
-  // Add items to tab
-  this->addChildWindow(lb);
-  this->addChildWindow(activateButton);
+  CEGUI::Window *tab =
+    static_cast<CEGUI::WindowEventArgs const &>(e).window->getParent();
+  CEGUI::Listbox *lb = static_cast<CEGUI::Listbox *>(tab->getChild(0));
+  ListboxItem *item = static_cast<ListboxItem *>(lb->getFirstSelectedItem());
+  if (item != NULL) {
+    DataManager *dm = static_cast<DataManager *>(item->getUserData());
+    dm->activate(2000);
+  }
+  return true;
 }

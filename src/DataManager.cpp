@@ -142,9 +142,10 @@ void HeightDataManager::normalize ()
     max = std::max(max, *std::max_element(keyVal.second.begin(),
                                           keyVal.second.end()));
   // Divide all by max
-  for (auto & keyVal : _dataMembers)
+  for (auto & keyVal : _dataMembers) {
     std::for_each(keyVal.second.begin(), keyVal.second.end(),
                   [&](double & d) {
                     d *= (Drawable::maxHeightDistortion/max);
                   });
+  }
 }

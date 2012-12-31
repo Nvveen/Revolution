@@ -27,29 +27,18 @@ class GUIManager {
     virtual ~GUIManager ();
 
     void render ();
-    void populateDataList ( std::vector<DataManager *> const & list );
+    void populateDatalists ( std::vector<DataManager *> const & list );
   protected:
   private:
     void init ();
     void setCEGUIPaths ();
     void createGUI ();
-    void setHandlers () {}
+    void setHandlers ();
     // Event handles
     bool handleOptionsVisibility ( CEGUI::EventArgs const & );
+    bool handleDSActivation ( CEGUI::EventArgs const & e );
 
     std::string CEGUIInstallBasePath;
-};
-
-class DatasetPane : public CEGUI::Window {
-  friend class GUIManager;
-  private:
-    DatasetPane ( std::string const & type, std::string const & name ) :
-      CEGUI::Window(type, name)
-    {
-    };
-
-    void init ( std::string const & name );
-    CEGUI::PushButton * getActivate ();
 };
 
 class GUIManagerException : public std::runtime_error {
@@ -67,10 +56,5 @@ class ListboxItem : public CEGUI::ListboxTextItem {
       this->setSelectionBrushImage("TaharezLook", "MultiListSelectionBrush");
     };
 };
-
-inline CEGUI::PushButton * DatasetPane::getActivate ()
-{
-  return static_cast<CEGUI::PushButton *>(getChild(getName()+"/Activate"));
-}
 
 #endif

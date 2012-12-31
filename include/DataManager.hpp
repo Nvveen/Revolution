@@ -24,6 +24,8 @@ class World;
 
 enum DataManagerType {
   DM_Height,
+  DM_Pattern,
+  DM_Color,
 };
 
 class DataManager {
@@ -37,13 +39,13 @@ class DataManager {
     virtual void deactivate ();
 
     std::string name;
+    DataManagerType type;
   protected:
     virtual void init ( std::ifstream & dataset, World & world ) = 0;
 
     std::map<Drawable *, std::vector<double>> _dataMembers;
     std::vector<unsigned int> _dim;
   private:
-    DataManagerType type;
 };
 
 class HeightDataManager : public DataManager {
