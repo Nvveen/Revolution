@@ -157,7 +157,7 @@ void GUIManager::setHandlers ()
   button = dsFrame->getCloseButton();
   button->subscribeEvent(CEGUI::PushButton::EventClicked,
       CEGUI::Event::Subscriber(&GUIManager::handleOptionsVisibility, this));
-  // TODO connect activate buttons per tab
+  // Connect activate buttons on tabs
   CEGUI::Window *tab =  wm.getWindow("Sheet/DatasetFrame/TabControl/HTab");
   button = static_cast<CEGUI::PushButton *>(
       tab->getChild(3));

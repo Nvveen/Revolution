@@ -48,6 +48,7 @@ DataManager * DataManager::readFile ( std::string const & dataset,
     if (type.size() != 1) {
       throw (DataManagerException("wrong token defined"));
     } else {
+      file.seekg(0);
       switch (type[0]) {
         case 'H':
           man = new HeightDataManager(file, world);
@@ -74,7 +75,8 @@ void DataManager::activate ( unsigned int const & dimension )
 {
   std::cout << "Activating " << name << " in dimension " << dimension;
   std::cout << std::endl;
-  unsigned int index = *std::find(_dim.begin(), _dim.end(), dimension);
+  unsigned int index = std::find(_dim.begin(), _dim.end(), dimension) -
+    _dim.begin();
   for (auto & keyVal : _dataMembers)
     keyVal.first->setHeightDistortion(keyVal.second[index]);
 }
@@ -109,10 +111,10 @@ void HeightDataManager::init ( std::ifstream & dataset, World & world )
       unsigned int col = 0;
       for (auto token : tokens) {
         std::stringstream buf(token);
-        if (row == 0) {
+        if (row == 0 && col > 0) {
           _dim.emplace_back();
           buf >> _dim.back();
-        } else {
+        } else if (row > 0) {
           if (col == 0) {
             d = world.getCountry(token);
             if (d != NULL)
@@ -142,10 +144,10 @@ void HeightDataManager::normalize ()
     max = std::max(max, *std::max_element(keyVal.second.begin(),
                                           keyVal.second.end()));
   // Divide all by max
-  for (auto & keyVal : _dataMembers) {
-    std::for_each(keyVal.second.begin(), keyVal.second.end(),
-                  [&](double & d) {
-                    d *= (Drawable::maxHeightDistortion/max);
-                  });
-  }
+  if (max > 0)
+    for (auto & keyVal : _dataMembers)
+      std::for_each(keyVal.second.begin(), keyVal.second.end(),
+                    [&](double & d) {
+                      d *= (Drawable::maxHeightDistortion/max);
+                    });
 }
