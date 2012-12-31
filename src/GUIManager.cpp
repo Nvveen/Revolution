@@ -100,21 +100,31 @@ void GUIManager::createGUI ()
 {
   std::cout << "Creating the GUI..." << std::endl;
   try {
-    using namespace CEGUI;
-    WindowManager & wm = WindowManager::getSingleton();
-    System & sys = System::getSingleton();
-    Window *root = wm.createWindow("DefaultWindow", "_MasterRoot");
+    CEGUI::WindowManager & wm = CEGUI::WindowManager::getSingleton();
+    CEGUI::System & sys = CEGUI::System::getSingleton();
+    CEGUI::Window *root = wm.createWindow("DefaultWindow", "_MasterRoot");
     sys.setGUISheet(root);
-    Window *sheet = wm.loadWindowLayout("TaharezRevolution.layout");
+    CEGUI::Window *sheet = wm.loadWindowLayout("TaharezRevolution.layout");
     sys.getGUISheet()->addChildWindow(sheet);
 
-    // Add default empty item to datalist.
-    ComboBox *combox = static_cast<ComboBox *>(wm.getWindow("Sheet/DataList"));
-    ListItem *item = new ListItem("No dataset");
-    item->setSelected(true);
-    combox->addItem(item);
-    combox->setText(item->getText());
-    combox->subscribe();
+    CEGUI::FrameWindow *dsFrame = static_cast<CEGUI::FrameWindow *>(
+        wm.getWindow("Sheet/DatasetFrame"));
+    // dsFrame->setProperty("Visible", "False");
+    // Add tabs
+    CEGUI::TabControl *tc = static_cast<CEGUI::TabControl *>(
+        wm.getWindow("Sheet/DatasetFrame/TabControl"));
+    DatasetPane *tab = static_cast<DatasetPane *>(wm.createWindow(
+          "TaharezLook/TabContentPane", "HTab"));
+    tab->init("Height datasets");
+    // Add tab to frame
+    tc->addTab(tab);
+    // Handle behavior of options-button
+    CEGUI::Window *button = wm.getWindow("Sheet/Options");
+    button->subscribeEvent(CEGUI::PushButton::EventClicked,
+        CEGUI::Event::Subscriber(&GUIManager::handleOptionsVisibility, this));
+    button = static_cast<CEGUI::Window *>(dsFrame->getCloseButton());
+    button->subscribeEvent(CEGUI::PushButton::EventClicked,
+        CEGUI::Event::Subscriber(&GUIManager::handleOptionsVisibility, this));
   }
   catch (CEGUI::Exception & e ) {
     std::cerr << "CEGUI Exception: " << e.getMessage() << std::endl;
@@ -122,33 +132,33 @@ void GUIManager::createGUI ()
   }
 }
 
-void GUIManager::populateDataList ( std::vector<DataManager *> const & list )
+bool GUIManager::handleOptionsVisibility ( CEGUI::EventArgs const & )
 {
-  ComboBox *combox = static_cast<ComboBox *>(
-      CEGUI::WindowManager::getSingleton().getWindow("Sheet/DataList"));
-  unsigned int i = 1;
-  for (DataManager *p : list ) {
-    ListItem *item = new ListItem(p->name, i);
-    combox->addItem(item);
-    item->setUserData(p);
-    i++;
-  }
+  CEGUI::Window *dsFrame = CEGUI::WindowManager::getSingleton().getWindow(
+      "Sheet/DatasetFrame");
+  std::string prop = dsFrame->getProperty("Visible").c_str();
+  if (prop == "False")
+    dsFrame->setProperty("Visible", "True");
+  else
+    dsFrame->setProperty("Visible", "False");
+  return true;
 }
 
-void ComboBox::subscribe ()
+void DatasetPane::init ( std::string const & name )
 {
-  this->subscribeEvent(CEGUI::Combobox::EventListSelectionAccepted,
-      CEGUI::Event::Subscriber(&ComboBox::setSelection, this));
-}
-
-bool ComboBox::setSelection ( CEGUI::EventArgs const & e )
-{
-  ComboBox *combox = static_cast<ComboBox *>(
-      CEGUI::WindowManager::getSingleton().getWindow("Sheet/DataList"));
-  ListItem *item = static_cast<ListItem *>(combox->getSelectedItem());
-  if (item->getID() == 0) {
-  } else {
-    DataManager *dm = static_cast<DataManager *>(item->getUserData());
-    dm->activate(2012);
-  }
+  CEGUI::WindowManager & wm = CEGUI::WindowManager::getSingleton();
+  this->setProperty("Text", name);
+  // Create list of datasets
+  CEGUI::Listbox *lb = static_cast<CEGUI::Listbox *>(
+      wm.createWindow("TaharezLook/Listbox", getName()+"/Listbox"));
+  lb->setProperty("UnifiedAreaRect", "{{0,10},{0,10},{1,-10},{0.6,0}}");
+  lb->addItem(new ListboxItem("Test 1"));
+  CEGUI::Window *activateButton = wm.createWindow(
+      "TaharezLook/Button", getName()+"/Activate");
+  activateButton->setProperty("UnifiedAreaRect",
+      "{{0,10},{0.6,10},{0.2,10},{0.67,10}}");
+  activateButton->setProperty("Text", "Activate");
+  // Add items to tab
+  this->addChildWindow(lb);
+  this->addChildWindow(activateButton);
 }

@@ -33,8 +33,23 @@ class GUIManager {
     void init ();
     void setCEGUIPaths ();
     void createGUI ();
+    void setHandlers () {}
+    // Event handles
+    bool handleOptionsVisibility ( CEGUI::EventArgs const & );
 
     std::string CEGUIInstallBasePath;
+};
+
+class DatasetPane : public CEGUI::Window {
+  friend class GUIManager;
+  private:
+    DatasetPane ( std::string const & type, std::string const & name ) :
+      CEGUI::Window(type, name)
+    {
+    };
+
+    void init ( std::string const & name );
+    CEGUI::PushButton * getActivate ();
 };
 
 class GUIManagerException : public std::runtime_error {
@@ -44,21 +59,18 @@ class GUIManagerException : public std::runtime_error {
     virtual ~GUIManagerException () throw() {};
 };
 
-class ComboBox : public CEGUI::Combobox {
-  friend class GUIManager;
-  private:
-    void subscribe ();
-    bool setSelection ( CEGUI::EventArgs const & e );
-};
-
-class ListItem : public CEGUI::ListboxTextItem {
-  friend class GUIManager;
-  private:
-    ListItem ( std::string const & text, int const & id = 0 ) :
-      CEGUI::ListboxTextItem(text, id) {
+class ListboxItem : public CEGUI::ListboxTextItem {
+  public:
+    ListboxItem ( std::string const & name, int const & id = 0 ) :
+      CEGUI::ListboxTextItem(name, id)
+    {
       this->setSelectionBrushImage("TaharezLook", "MultiListSelectionBrush");
     };
-    virtual ~ListItem () {};
 };
+
+inline CEGUI::PushButton * DatasetPane::getActivate ()
+{
+  return static_cast<CEGUI::PushButton *>(getChild(getName()+"/Activate"));
+}
 
 #endif
