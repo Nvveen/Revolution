@@ -119,10 +119,8 @@ void GUIManager::populateDatalists ( std::vector<DataManager *> const & list )
   CEGUI::WindowManager & wm = CEGUI::WindowManager::getSingleton();
   auto populate = [&]( std::string const & name,
       DataManagerType const & type ) {
-    CEGUI::Listbox *lb = static_cast<CEGUI::Listbox *>(
-        wm.getWindow("Sheet/DatasetFrame/TabControl/"+name+"/Listbox"));
-    CEGUI::Slider *slider = static_cast<CEGUI::Slider *>(
-        wm.getWindow("Sheet/DatasetFrame/TabControl/"+name+"/Slider"));
+    CEGUI::Listbox *lb = static_cast<CEGUI::Listbox *>(wm.getWindow(
+          "Sheet/DatasetFrame/TabControl/"+name+"/Listbox"));
     for (DataManager *p : list)
       if (p->type == type) {
         ListboxItem *item = new ListboxItem(p->name);
@@ -156,6 +154,13 @@ void GUIManager::setHandlers ()
       tab->getChild(3));
   button->subscribeEvent(CEGUI::PushButton::EventClicked,
       CEGUI::Event::Subscriber(&GUIManager::handleDSActivation, this));
+  CEGUI::Scrollbar *sb = static_cast<CEGUI::Scrollbar *>(tab->getChild(2));
+  sb->subscribeEvent(CEGUI::Scrollbar::EventScrollPositionChanged,
+      CEGUI::Event::Subscriber(&GUIManager::handleScrollbarChanged, this));
+  CEGUI::Listbox *lb = static_cast<CEGUI::Listbox *>(tab->getChild(0));
+  lb->subscribeEvent(CEGUI::Listbox::EventSelectionChanged,
+      CEGUI::Event::Subscriber(&GUIManager::handleDSSelection, this));
+
 }
 
 bool GUIManager::handleOptionsVisibility ( CEGUI::EventArgs const & )
@@ -178,7 +183,50 @@ bool GUIManager::handleDSActivation ( CEGUI::EventArgs const & e )
   ListboxItem *item = static_cast<ListboxItem *>(lb->getFirstSelectedItem());
   if (item != NULL) {
     DataManager *dm = static_cast<DataManager *>(item->getUserData());
-    dm->activate(2000);
+    CEGUI::Scrollbar *sb = static_cast<CEGUI::Scrollbar *>(tab->getChild(2));
+    std::vector<unsigned int> const & dims = dm->getDimensions();
+    unsigned int dim = dims[int(sb->getScrollPosition()*(dims.size()-1))];
+    dm->activate(dim);
   }
+  // TODO handle else-error
+  return true;
+}
+
+bool GUIManager::handleDSSelection ( CEGUI::EventArgs const & e )
+{
+  static ListboxItem *prevSel = NULL;
+  if (prevSel != NULL) {
+    prevSel->getOwnerWindow()->getChild(2)->disable();
+  }
+  CEGUI::Window *tab =
+    static_cast<CEGUI::WindowEventArgs const &>(e).window->getParent();
+  CEGUI::Listbox *lb = static_cast<CEGUI::Listbox *>(tab->getChild(0));
+  CEGUI::Scrollbar *sb = static_cast<CEGUI::Scrollbar *>(tab->getChild(2));
+  DataManager *dm = static_cast<DataManager *>(
+      lb->getFirstSelectedItem()->getUserData());
+  std::vector<unsigned int> const & dim = dm->getDimensions();
+  sb->setStepSize(1.0/float(dim.size()-1));
+  sb->enable();
+  CEGUI::WindowEventArgs w(sb);
+  sb->fireEvent(CEGUI::Scrollbar::EventScrollPositionChanged, w);
+  prevSel = static_cast<ListboxItem *>(lb->getFirstSelectedItem());
+  return true;
+}
+
+bool GUIManager::handleScrollbarChanged ( CEGUI::EventArgs const & e )
+{
+  CEGUI::Window *tab =
+    static_cast<CEGUI::WindowEventArgs const &>(e).window->getParent();
+  CEGUI::Scrollbar *scrollbar =
+    static_cast<CEGUI::Scrollbar *>(tab->getChild(2));
+  CEGUI::Listbox *lb = static_cast<CEGUI::Listbox *>(tab->getChild(0));
+  CEGUI::Window *desc = tab->getChild(1);
+  DataManager *dm = static_cast<DataManager *>(
+      lb->getFirstSelectedItem()->getUserData());
+  std::vector<unsigned int> const & dims = dm->getDimensions();
+  float f = static_cast<CEGUI::Scrollbar *>(scrollbar)->getScrollPosition();
+  unsigned int dim = dims[int(f*(dims.size()-1))];
+  std::ostringstream ss; ss << "Dimension: " << dim;
+  desc->setText(ss.str());
   return true;
 }

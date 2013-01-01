@@ -37,6 +37,8 @@ class GUIManager {
     // Event handles
     bool handleOptionsVisibility ( CEGUI::EventArgs const & );
     bool handleDSActivation ( CEGUI::EventArgs const & e );
+    bool handleDSSelection ( CEGUI::EventArgs const & e );
+    bool handleScrollbarChanged ( CEGUI::EventArgs const & e );
 
     std::string CEGUIInstallBasePath;
 };
@@ -49,7 +51,8 @@ class GUIManagerException : public std::runtime_error {
 };
 
 class ListboxItem : public CEGUI::ListboxTextItem {
-  public:
+  friend class GUIManager;
+  private:
     ListboxItem ( std::string const & name, int const & id = 0 ) :
       CEGUI::ListboxTextItem(name, id)
     {

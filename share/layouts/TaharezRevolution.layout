@@ -30,9 +30,11 @@
             <Property Name="FrameEnabled" Value="False" />
             <Property Name="ID" Value="1" />
           </Window>
-          <Window Type="TaharezLook/HorizontalScrollbar" Name="Sheet/DatasetFrame/TabControl/HTab/Slider">
-            <Property Name="UnifiedAreaRect" Value="{{0,10},{0.7,-5},{1,-10},{0.75,-5}}" />
+          <Window Type="TaharezLook/HorizontalScrollbar" Name="Sheet/DatasetFrame/TabControl/HTab/Scrollbar">
             <Property Name="ID" Value="2" />
+            <Property Name="Disabled" Value="True" />
+            <Property Name="UnifiedAreaRect" Value="{{0,10},{0.7,-5},{1,-10},{0.75,-5}}" />
+            <Property Name="StepSize" Value="0.1" />
           </Window>
           <Window Type="TaharezLook/Button" Value="Sheet/DatasetFrame/TabControl/HTab/Activate">
             <Property Name="Text" Value="Activate" />

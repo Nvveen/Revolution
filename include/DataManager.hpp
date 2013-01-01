@@ -38,6 +38,8 @@ class DataManager {
     virtual void activate ( unsigned int const & dimension );
     virtual void deactivate ();
 
+    std::vector<unsigned int> const & getDimensions ();
+
     std::string name;
     DataManagerType type;
   protected:
@@ -65,5 +67,10 @@ class DataManagerException : public std::runtime_error {
     };
     virtual ~DataManagerException () throw() {};
 };
+
+inline std::vector<unsigned int> const & DataManager::getDimensions ()
+{
+  return _dim;
+}
 
 #endif
