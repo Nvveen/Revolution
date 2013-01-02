@@ -12,6 +12,7 @@
 // 
 // You should have received a copy of the GNU General Public License along with 
 // Revolution. If not, see <http://www.gnu.org/licenses/>.
+#include <GL/glew.h>
 #include "Screen.hpp"
 
 
@@ -44,13 +45,11 @@ SDL_Surface *Screen::initSDL() {
     SDL_Quit();
     exit(0);
   }
-#ifdef NOCEGUI
   GLenum res = glewInit();
   if (res != GLEW_OK) {
     std::cerr << "Error: " << glewGetErrorString(res) << std::endl;
     exit(1);
   }
-#endif
   SDL_EnableUNICODE(1);
   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
   SDL_ShowCursor(SDL_DISABLE);

@@ -121,12 +121,15 @@ void GUIManager::populateDatalists ( std::vector<DataManager *> const & list )
       DataManagerType const & type ) {
     CEGUI::Listbox *lb = static_cast<CEGUI::Listbox *>(wm.getWindow(
           "Sheet/DatasetFrame/TabControl/"+name+"/Listbox"));
-    for (DataManager *p : list)
-      if (p->type == type) {
-        ListboxItem *item = new ListboxItem(p->name);
+    unsigned int i = 0;
+    for (DataManager *p : list) {
+      if (p != NULL && p->type == type) {
+        ListboxItem *item = new ListboxItem(p->name, i);
         item->setUserData(p);
         lb->addItem(item);
       }
+      i++;
+    }
   };
   populate("HTab", DM_Height);
   populate("PTab", DM_Pattern);
@@ -149,18 +152,24 @@ void GUIManager::setHandlers ()
   button->subscribeEvent(CEGUI::PushButton::EventClicked,
       CEGUI::Event::Subscriber(&GUIManager::handleOptionsVisibility, this));
   // Connect activate buttons on tabs
+  auto connectFrames = [=](CEGUI::Window *tab) {
+    CEGUI::PushButton *button =
+      static_cast<CEGUI::PushButton *>(tab->getChild(3));
+    button->subscribeEvent(CEGUI::PushButton::EventClicked,
+        CEGUI::Event::Subscriber(&GUIManager::handleDSActivation, this));
+    CEGUI::Scrollbar *sb = static_cast<CEGUI::Scrollbar *>(tab->getChild(2));
+    sb->subscribeEvent(CEGUI::Scrollbar::EventScrollPositionChanged,
+        CEGUI::Event::Subscriber(&GUIManager::handleScrollbarChanged, this));
+    CEGUI::Listbox *lb = static_cast<CEGUI::Listbox *>(tab->getChild(0));
+    lb->subscribeEvent(CEGUI::Listbox::EventSelectionChanged,
+        CEGUI::Event::Subscriber(&GUIManager::handleDSSelection, this));
+  };
   CEGUI::Window *tab =  wm.getWindow("Sheet/DatasetFrame/TabControl/HTab");
-  button = static_cast<CEGUI::PushButton *>(
-      tab->getChild(3));
-  button->subscribeEvent(CEGUI::PushButton::EventClicked,
-      CEGUI::Event::Subscriber(&GUIManager::handleDSActivation, this));
-  CEGUI::Scrollbar *sb = static_cast<CEGUI::Scrollbar *>(tab->getChild(2));
-  sb->subscribeEvent(CEGUI::Scrollbar::EventScrollPositionChanged,
-      CEGUI::Event::Subscriber(&GUIManager::handleScrollbarChanged, this));
-  CEGUI::Listbox *lb = static_cast<CEGUI::Listbox *>(tab->getChild(0));
-  lb->subscribeEvent(CEGUI::Listbox::EventSelectionChanged,
-      CEGUI::Event::Subscriber(&GUIManager::handleDSSelection, this));
-
+  connectFrames(tab);
+  tab = wm.getWindow("Sheet/DatasetFrame/TabControl/PTab");
+  connectFrames(tab);
+  tab = wm.getWindow("Sheet/DatasetFrame/TabControl/CTab");
+  connectFrames(tab);
 }
 
 bool GUIManager::handleOptionsVisibility ( CEGUI::EventArgs const & )

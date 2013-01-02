@@ -18,7 +18,7 @@
 #include <boost/filesystem.hpp>
 #include "World.hpp"
 
-World World::_worldSingleton = World();
+World *World::_worldSingleton = NULL;
 
 World::World ( unsigned int const & width, unsigned int const & height )
 {
@@ -103,8 +103,6 @@ void World::init ()
               std::string str;
               getline(regionFile, str);
               std::stringstream line(str);
-              if (str.size() < 5 || str[0] == '#')
-                std::cout << str << std::endl;
               Vertex v;
               getline(line, str, ',');
               std::stringstream(str) >> v.position[0];
@@ -149,7 +147,6 @@ void World::init ()
   std::cout << "Loaded " << names.size() << " countries." << std::endl;
   _maxDrawable = _drawables.size();
   std::cout << "Loading datasets... " << std::endl;
-  readDatasets();
   _shader->unbind();
 }
 
@@ -191,8 +188,11 @@ void World::readDatasets ()
   try {
     if (bfs::exists(p)) {
       bfs::directory_iterator it(p), end_it;
-      for (; it != end_it; ++it)
-        _datasets.push_back(DataManager::readFile(it->path().string()));
+      for (; it != end_it; ++it) {
+        DataManager *d = DataManager::readFile(it->path().string());
+        if (d != NULL)
+          _datasets.push_back(d);
+      }
     } else {
       std::cerr << p << " does not exist." << std::endl;
     }

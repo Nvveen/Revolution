@@ -23,12 +23,14 @@
 struct DirectionalLight;
 
 class World {
-    static World _worldSingleton;
+    static World *_worldSingleton;
   public:
     static void initWorld ( unsigned int const & width,
                             unsigned int const & height )
     {
-      _worldSingleton = World(width, height);
+      std::cout << "Constructing world" << std::endl;
+      _worldSingleton = new World(width, height);
+      _worldSingleton->readDatasets();
     }
     virtual ~World();
 
@@ -49,7 +51,7 @@ class World {
 
     static World & getSingleton ()
     {
-      return _worldSingleton;
+      return *_worldSingleton;
     }
   protected:
   private:
