@@ -15,9 +15,7 @@
 #ifndef WORLD_HPP
 #define WORLD_HPP
 
-#include <vector>
-#include <GL/gl.h>
-#include "Shader.hpp"
+#include <iostream>
 #include "Camera.hpp"
 #include "Drawable.hpp"
 #include "DataManager.hpp"

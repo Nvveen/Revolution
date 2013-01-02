@@ -15,7 +15,6 @@
 #ifndef SCREEN_HPP
 #define SCREEN_HPP
 
-#include <GL/glew.h>
 #include <SDL/SDL.h>
 #include "GUIManager.hpp"
 #include "World.hpp"

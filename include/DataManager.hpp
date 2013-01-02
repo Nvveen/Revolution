@@ -16,8 +16,8 @@
 #define  DATAMANAGER_HPP
 
 #include <string>
-#include <fstream>
-#include <stdexcept>
+#include <vector>
+#include <map>
 #include "Drawable.hpp"
 
 class World;
@@ -64,17 +64,17 @@ class HeightDataManager : public DataManager {
   private:
 };
 
-class ColorDataManager : public DataManager {
-  public:
-    ColorDataManager ( std::ifstream & dataset );
-    virtual ~ColorDataManager ();
-
-    virtual void activate ( unsigned int const & dimension );
-    virtual void deactivate ();
-  protected:
-    virtual void normalize ();
-  private:
-};
+// class ColorDataManager : public DataManager {
+//   public:
+//     ColorDataManager ( std::ifstream & dataset );
+//     virtual ~ColorDataManager ();
+// 
+//     virtual void activate ( unsigned int const & dimension );
+//     virtual void deactivate ();
+//   protected:
+//     virtual void normalize ();
+//   private:
+// };
 
 class DataManagerException : public std::runtime_error {
   public:

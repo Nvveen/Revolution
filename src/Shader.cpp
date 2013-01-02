@@ -13,8 +13,10 @@
 // You should have received a copy of the GNU General Public License along with 
 // Revolution. If not, see <http://www.gnu.org/licenses/>.
 #include <fstream>
-#include <cstdlib>
 #include <glm/gtc/type_ptr.hpp>
+#include <sstream>
+#include <iostream>
+#include <GL/glew.h>
 #include "Shader.hpp"
 
 Shader::Shader() : _bound(false) {

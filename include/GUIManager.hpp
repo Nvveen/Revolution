@@ -15,8 +15,6 @@
 #ifndef GUIMANAGER_HPP
 #define GUIMANAGER_HPP
 
-#include <string>
-#include <stdexcept>
 #include <CEGUI/CEGUI.h>
 #include <vector>
 #include "DataManager.hpp"

@@ -12,14 +12,10 @@
 // 
 // You should have received a copy of the GNU General Public License along with 
 // Revolution. If not, see <http://www.gnu.org/licenses/>.
-#include <iostream>
 #include <fstream>
 #include <sstream>
-#include <GL/glew.h>
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/random.hpp>
 #include <boost/filesystem.hpp>
-#include <algorithm>
 #include "World.hpp"
 
 World World::_worldSingleton = World();

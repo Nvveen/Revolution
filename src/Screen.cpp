@@ -13,11 +13,6 @@
 // You should have received a copy of the GNU General Public License along with 
 // Revolution. If not, see <http://www.gnu.org/licenses/>.
 #include "Screen.hpp"
-#include <iostream>
-#ifndef NOCEGUI
-#include <CEGUI/CEGUI.h>
-#endif
-#include <unistd.h>
 
 
 Screen::Screen( const unsigned int & width, const unsigned int & height ) :
@@ -31,6 +26,7 @@ Screen::Screen( const unsigned int & width, const unsigned int & height ) :
 Screen::~Screen() {
   std::cout << "Cleaning up the screen..." << std::endl;
   delete _world;
+  delete _gui;
   SDL_FreeSurface(_surface);
 }
  

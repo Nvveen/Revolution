@@ -12,13 +12,10 @@
 // 
 // You should have received a copy of the GNU General Public License along with 
 // Revolution. If not, see <http://www.gnu.org/licenses/>.
-#include <iostream>
+// #include <iostream>
 #include <boost/tokenizer.hpp>
-#include <vector>
+#include <fstream>
 #include <sstream>
-#include <iterator>
-#include <algorithm>
-#include <map>
 #include "DataManager.hpp"
 #include "World.hpp"
 
@@ -57,12 +54,12 @@ DataManager * DataManager::readFile ( std::string const & dataset )
           std::cout << "Test 2" << std::endl;
           man->type = DM_Height;
           break;
-        case 'C':
-          std::cout << "Test 3" << std::endl;
-          man = new ColorDataManager(file);
-          std::cout << "Test 4" << std::endl;
-          man->type = DM_Color;
-          break;
+        // case 'C':
+        //   std::cout << "Test 3" << std::endl;
+        //   man = new ColorDataManager(file);
+        //   std::cout << "Test 4" << std::endl;
+        //   man->type = DM_Color;
+        //   break;
         default:
           std::cout << "Test 5" << std::endl;
           throw (DataManagerException("wrong dataset type defined"));
@@ -167,40 +164,40 @@ void HeightDataManager::normalize ()
                     });
 }
 
-ColorDataManager::ColorDataManager ( std::ifstream & dataset )
-{
-  init(dataset);
-  normalize();
-}
-
-ColorDataManager::~ColorDataManager ()
-{
-}
-
-void ColorDataManager::activate ( unsigned int const & dimension )
-{
-  World & w = World::getSingleton();
-  for (Drawable *d : w.getDrawables()) {
-    d->setColor(glm::vec3(0.5f, 0.5f, 0.5f));
-  }
-}
-
-void ColorDataManager::deactivate ()
-{
-  World & w = World::getSingleton();
-  for (Drawable *d : w.getDrawables()) {
-    d->resetColor();
-  }
-}
-
-void ColorDataManager::normalize ()
-{
-  for (unsigned int i = 0; i < _dim.size(); i++) {
-    double max = 0;
-    for (auto keyVal : _dataMembers)
-      if (max < keyVal.second[i]) max = keyVal.second[i];
-    for (auto & keyVal : _dataMembers) {
-      keyVal.second[i] /= max;
-    }
-  }
-}
+// ColorDataManager::ColorDataManager ( std::ifstream & dataset )
+// {
+//   init(dataset);
+//   normalize();
+// }
+// 
+// ColorDataManager::~ColorDataManager ()
+// {
+// }
+// 
+// void ColorDataManager::activate ( unsigned int const & dimension )
+// {
+//   World & w = World::getSingleton();
+//   for (Drawable *d : w.getDrawables()) {
+//     d->setColor(glm::vec3(0.5f, 0.5f, 0.5f));
+//   }
+// }
+// 
+// void ColorDataManager::deactivate ()
+// {
+//   World & w = World::getSingleton();
+//   for (Drawable *d : w.getDrawables()) {
+//     d->resetColor();
+//   }
+// }
+// 
+// void ColorDataManager::normalize ()
+// {
+//   for (unsigned int i = 0; i < _dim.size(); i++) {
+//     double max = 0;
+//     for (auto keyVal : _dataMembers)
+//       if (max < keyVal.second[i]) max = keyVal.second[i];
+//     for (auto & keyVal : _dataMembers) {
+//       keyVal.second[i] /= max;
+//     }
+//   }
+// }
