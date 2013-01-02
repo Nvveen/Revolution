@@ -22,6 +22,8 @@
 #include "DataManager.hpp"
 #include "World.hpp"
 
+DataManager *DataManager::setHeight = NULL;
+
 DataManager::DataManager ()
 {
 }
@@ -54,6 +56,10 @@ DataManager * DataManager::readFile ( std::string const & dataset,
           man = new HeightDataManager(file, world);
           man->type = DM_Height;
           break;
+        case 'C':
+          man = new ColorDataManager(file, world);
+          man->type = DM_Color;
+          break;
         default:
           throw (DataManagerException("wrong dataset type defined"));
       }
@@ -71,34 +77,7 @@ DataManager * DataManager::readFile ( std::string const & dataset,
   return man;
 }
 
-void DataManager::activate ( unsigned int const & dimension )
-{
-  std::cout << "Activating " << name << " in dimension " << dimension;
-  std::cout << std::endl;
-  unsigned int index = std::find(_dim.begin(), _dim.end(), dimension) -
-    _dim.begin();
-  for (auto & keyVal : _dataMembers)
-    keyVal.first->setHeightDistortion(keyVal.second[index]);
-}
-
-void DataManager::deactivate ()
-{
-  for (auto & keyVal : _dataMembers)
-    keyVal.first->setHeightDistortion(0);
-}
-
-HeightDataManager::HeightDataManager ( std::ifstream & dataset,
-                                       World & world )
-{
-  init(dataset, world);
-  normalize();
-}
-
-HeightDataManager::~HeightDataManager ()
-{
-}
-
-void HeightDataManager::init ( std::ifstream & dataset, World & world )
+void DataManager::init ( std::ifstream & dataset, World & world )
 {
   typedef boost::tokenizer<boost::escaped_list_separator<char>> Tokenizer;
   std::string line;
@@ -136,6 +115,39 @@ void HeightDataManager::init ( std::ifstream & dataset, World & world )
   }
 }
 
+HeightDataManager::HeightDataManager ( std::ifstream & dataset,
+                                       World & world )
+{
+  init(dataset, world);
+  normalize();
+}
+
+HeightDataManager::~HeightDataManager ()
+{
+}
+
+void HeightDataManager::activate ( unsigned int const & dimension )
+{
+  std::cout << "Activating " << name << " in dimension " << dimension;
+  std::cout << std::endl;
+  if (DataManager::setHeight != NULL && this->type == DM_Height) {
+    std::cout << "Deactivating previous dataset " << setHeight->name;
+    std::cout << std::endl;
+    setHeight->deactivate();
+    setHeight = this;
+  }
+  unsigned int index = std::find(_dim.begin(), _dim.end(), dimension) -
+    _dim.begin();
+  for (auto & keyVal : _dataMembers)
+    keyVal.first->setHeightDistortion(keyVal.second[index]);
+}
+
+void HeightDataManager::deactivate ()
+{
+  for (auto & keyVal : _dataMembers)
+    keyVal.first->setHeightDistortion(0);
+}
+
 void HeightDataManager::normalize ()
 {
   // Find max element
@@ -150,4 +162,33 @@ void HeightDataManager::normalize ()
                     [&](double & d) {
                       d *= (Drawable::maxHeightDistortion/max);
                     });
+}
+
+ColorDataManager::ColorDataManager ( std::ifstream & dataset, World & world )
+{
+  init(dataset, world);
+}
+
+ColorDataManager::~ColorDataManager ()
+{
+}
+
+void ColorDataManager::activate ( unsigned int const & dimension )
+{
+}
+
+void ColorDataManager::deactivate ()
+{
+}
+
+void ColorDataManager::normalize ()
+{
+  for (unsigned int i = 0; i < _dim.size(); i++) {
+    double max = 0;
+    for (auto keyVal : _dataMembers)
+      if (max < keyVal.second[i]) max = keyVal.second[i];
+    for (auto & keyVal : _dataMembers) {
+      keyVal.second[i] /= max;
+    }
+  }
 }

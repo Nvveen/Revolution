@@ -32,8 +32,8 @@
           </Window>
           <Window Type="TaharezLook/HorizontalScrollbar" Name="Sheet/DatasetFrame/TabControl/HTab/Scrollbar">
             <Property Name="ID" Value="2" />
-            <Property Name="Disabled" Value="True" />
             <Property Name="UnifiedAreaRect" Value="{{0,10},{0.7,-5},{1,-10},{0.75,-5}}" />
+            <Property Name="Disabled" Value="True" />
             <Property Name="StepSize" Value="0.1" />
           </Window>
           <Window Type="TaharezLook/Button" Value="Sheet/DatasetFrame/TabControl/HTab/Activate">
@@ -57,6 +57,8 @@
           <Window Type="TaharezLook/HorizontalScrollbar" Name="Sheet/DatasetFrame/TabControl/PTab/Slider">
             <Property Name="UnifiedAreaRect" Value="{{0,10},{0.7,-5},{1,-10},{0.75,-5}}" />
             <Property Name="ID" Value="2" />
+            <Property Name="Disabled" Value="True" />
+            <Property Name="StepSize" Value="0.1" />
           </Window>
           <Window Type="TaharezLook/Button" Value="Sheet/DatasetFrame/TabControl/PTab/Activate">
             <Property Name="Text" Value="Activate" />
@@ -79,6 +81,8 @@
           <Window Type="TaharezLook/HorizontalScrollbar" Name="Sheet/DatasetFrame/TabControl/CTab/Slider">
             <Property Name="UnifiedAreaRect" Value="{{0,10},{0.7,-5},{1,-10},{0.75,-5}}" />
             <Property Name="ID" Value="2" />
+            <Property Name="Disabled" Value="True" />
+            <Property Name="StepSize" Value="0.1" />
           </Window>
           <Window Type="TaharezLook/Button" Value="Sheet/DatasetFrame/TabControl/CTab/Activate">
             <Property Name="Text" Value="Activate" />

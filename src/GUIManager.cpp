@@ -139,7 +139,7 @@ void GUIManager::setHandlers ()
 
   CEGUI::FrameWindow *dsFrame = static_cast<CEGUI::FrameWindow *>(
       wm.getWindow("Sheet/DatasetFrame"));
-  // dsFrame->setProperty("Visible", "False");
+  dsFrame->hide();
   // Handle behavior of options-button
   CEGUI::PushButton *button = static_cast<CEGUI::PushButton *>(
       wm.getWindow("Sheet/Options"));
@@ -169,9 +169,9 @@ bool GUIManager::handleOptionsVisibility ( CEGUI::EventArgs const & )
       "Sheet/DatasetFrame");
   std::string prop = dsFrame->getProperty("Visible").c_str();
   if (prop == "False")
-    dsFrame->setProperty("Visible", "True");
+    dsFrame->show();
   else
-    dsFrame->setProperty("Visible", "False");
+    dsFrame->hide();
   return true;
 }
 

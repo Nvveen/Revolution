@@ -42,7 +42,8 @@ class World {
     void selectCountry (int const & x, int const & y);
     Drawable * getCountry ( std::string const & name );
 
-    std::vector<DataManager *> getDatasets ();
+    std::vector<Drawable *> & getDrawables ();
+    std::vector<DataManager *> & getDatasets ();
   protected:
   private:
     Shader *_shader;
@@ -101,7 +102,12 @@ inline DirectionalLight World::getDefaultLight ()
   return d;
 }
 
-inline std::vector<DataManager *> World::getDatasets ()
+inline std::vector<Drawable *> & World::getDrawables ()
+{
+  return _drawables;
+}
+
+inline std::vector<DataManager *> & World::getDatasets ()
 {
   return _datasets;
 }
