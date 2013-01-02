@@ -73,7 +73,8 @@ void Screen::createGUI() {
   std::cout << "Creating the GUI..." << std::endl;
   try {
     _gui = new GUIManager;
-    _world = new World(_w, _h);
+    World::initWorld(_w, _h);
+    _world = &World::getSingleton();
     _gui->populateDatalists(_world->getDatasets());
   }
   catch (GUIManagerException & e) {

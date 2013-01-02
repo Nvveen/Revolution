@@ -32,8 +32,7 @@ DataManager::~DataManager ()
 {
 }
 
-DataManager * DataManager::readFile ( std::string const & dataset,
-    World & world )
+DataManager * DataManager::readFile ( std::string const & dataset )
 {
   std::ifstream file;
   DataManager * man = NULL;
@@ -53,11 +52,11 @@ DataManager * DataManager::readFile ( std::string const & dataset,
       file.seekg(0);
       switch (type[0]) {
         case 'H':
-          man = new HeightDataManager(file, world);
+          man = new HeightDataManager(file);
           man->type = DM_Height;
           break;
         case 'C':
-          man = new ColorDataManager(file, world);
+          man = new ColorDataManager(file);
           man->type = DM_Color;
           break;
         default:
@@ -77,9 +76,10 @@ DataManager * DataManager::readFile ( std::string const & dataset,
   return man;
 }
 
-void DataManager::init ( std::ifstream & dataset, World & world )
+void DataManager::init ( std::ifstream & dataset )
 {
   typedef boost::tokenizer<boost::escaped_list_separator<char>> Tokenizer;
+  World & world = World::getSingleton();
   std::string line;
   unsigned int row = 0;
   // TODO make proper error
@@ -115,10 +115,9 @@ void DataManager::init ( std::ifstream & dataset, World & world )
   }
 }
 
-HeightDataManager::HeightDataManager ( std::ifstream & dataset,
-                                       World & world )
+HeightDataManager::HeightDataManager ( std::ifstream & dataset )
 {
-  init(dataset, world);
+  init(dataset);
   normalize();
 }
 
@@ -164,9 +163,10 @@ void HeightDataManager::normalize ()
                     });
 }
 
-ColorDataManager::ColorDataManager ( std::ifstream & dataset, World & world )
+ColorDataManager::ColorDataManager ( std::ifstream & dataset )
 {
-  init(dataset, world);
+  init(dataset);
+  normalize();
 }
 
 ColorDataManager::~ColorDataManager ()
@@ -175,6 +175,9 @@ ColorDataManager::~ColorDataManager ()
 
 void ColorDataManager::activate ( unsigned int const & dimension )
 {
+  World & w = World::getSingleton();
+  for (Drawable *d : w.getDrawables()) {
+  }
 }
 
 void ColorDataManager::deactivate ()

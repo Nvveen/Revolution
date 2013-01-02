@@ -25,9 +25,13 @@
 struct DirectionalLight;
 
 class World {
+    static World _worldSingleton;
   public:
-    World () {}
-    World (const unsigned int & width, const unsigned int & height);
+    static void initWorld ( unsigned int const & width,
+                            unsigned int const & height )
+    {
+      _worldSingleton = World(width, height);
+    }
     virtual ~World();
 
     void draw ();
@@ -44,8 +48,16 @@ class World {
 
     std::vector<Drawable *> & getDrawables ();
     std::vector<DataManager *> & getDatasets ();
+
+    static World & getSingleton ()
+    {
+      return _worldSingleton;
+    }
   protected:
   private:
+    World () {}
+    World (const unsigned int & width, const unsigned int & height);
+
     Shader *_shader;
     Camera *_cam;
     DirectionalLight *_dLight0;

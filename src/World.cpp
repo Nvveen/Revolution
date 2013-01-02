@@ -22,7 +22,9 @@
 #include <algorithm>
 #include "World.hpp"
 
-World::World(const unsigned int & width, const unsigned int & height)
+World World::_worldSingleton = World();
+
+World::World ( unsigned int const & width, unsigned int const & height )
 {
   _show = 0;
   _maxDrawable = 0;
@@ -191,7 +193,7 @@ void World::readDatasets ()
     if (bfs::exists(p)) {
       bfs::directory_iterator it(p), end_it;
       for (; it != end_it; ++it)
-        _datasets.push_back(DataManager::readFile(it->path().string(), *this));
+        _datasets.push_back(DataManager::readFile(it->path().string()));
     } else {
       std::cerr << p << " does not exist." << std::endl;
     }

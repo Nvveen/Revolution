@@ -33,8 +33,7 @@ class DataManager {
     DataManager ();
     virtual ~DataManager ();
 
-    static DataManager * readFile ( std::string const & dataset,
-                                    World & world );
+    static DataManager * readFile ( std::string const & dataset);
     virtual void activate ( unsigned int const & dimension ) = 0;
     virtual void deactivate () = 0;
 
@@ -45,7 +44,7 @@ class DataManager {
 
     static DataManager *setHeight;
   protected:
-    virtual void init ( std::ifstream & dataset, World & world );
+    virtual void init ( std::ifstream & dataset );
     virtual void normalize () = 0;
 
     std::map<Drawable *, std::vector<double>> _dataMembers;
@@ -55,7 +54,7 @@ class DataManager {
 
 class HeightDataManager : public DataManager {
   public:
-    HeightDataManager ( std::ifstream & dataset, World & world );
+    HeightDataManager ( std::ifstream & dataset );
     virtual ~HeightDataManager ();
 
     virtual void activate ( unsigned int const & dimension );
@@ -67,7 +66,7 @@ class HeightDataManager : public DataManager {
 
 class ColorDataManager : public DataManager {
   public:
-    ColorDataManager ( std::ifstream & dataset, World & world );
+    ColorDataManager ( std::ifstream & dataset );
     virtual ~ColorDataManager ();
 
     virtual void activate ( unsigned int const & dimension );
