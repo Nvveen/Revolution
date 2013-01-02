@@ -144,6 +144,9 @@ void World::init ()
     catch (bfs::filesystem_error const & e) {
       std::cerr << e.what() << std::endl;
     }
+    catch (...) {
+      std::cerr << "Something bad happened!" << std::endl;
+    }
   }
 
   std::cout << "Done loading countries..." << std::endl;

@@ -21,8 +21,8 @@ Drawable::Drawable ()
 }
 
 Drawable::Drawable ( Shader * const shader, glm::vec4 const & primary ) : 
-  _shader(shader), _primaryColor(primary), _model(glm::mat4(1.0)),
-  _heightDistortion(0)
+  _shader(shader), _primaryColor(primary), _savedColor(glm::vec4(0.0f)),
+  _model(glm::mat4(1.0)), _heightDistortion(0)
 {
 }
 

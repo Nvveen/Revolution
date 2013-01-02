@@ -72,9 +72,9 @@ SDL_Surface *Screen::initSDL() {
 void Screen::createGUI() {
   std::cout << "Creating the GUI..." << std::endl;
   try {
-    _gui = new GUIManager;
     World::initWorld(_w, _h);
     _world = &World::getSingleton();
+    _gui = new GUIManager;
     _gui->populateDatalists(_world->getDatasets());
   }
   catch (GUIManagerException & e) {

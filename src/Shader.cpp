@@ -31,6 +31,8 @@ Shader::~Shader() {
 void Shader::add( std::string fileName, GLenum type ) {
   try {
     if ( _shaderProgram == 0 ) _shaderProgram = glCreateProgram();
+    if (_shaderProgram == 0)
+      throw (ShaderException("can't create shader program"));
 
     std::string code = addCode(fileName);
     GLuint object = compileShader(code, type);
@@ -41,6 +43,12 @@ void Shader::add( std::string fileName, GLenum type ) {
   catch (ShaderException e) {
     std::cerr << e.what() << std::endl;
     exit(1);
+  }
+  catch (std::exception & e) {
+    std::cout << e.what() << std::endl;
+  }
+  catch (...) {
+    std::cerr << "WTF" << std::endl;
   }
 }
 
@@ -71,7 +79,7 @@ void Shader::link() {
         GLchar errorLog[1024];
         glGetProgramInfoLog(_shaderProgram, sizeof(errorLog), NULL, errorLog);
         throw(ShaderException("Error linking shader program: "+
-              std::string(errorLog), _shaderProgram));
+              std::string(errorLog)));
     }
 
     glValidateProgram(_shaderProgram);
@@ -80,8 +88,7 @@ void Shader::link() {
     if ( success == GL_FALSE ) {
         GLchar errorLog[1024];
         glGetProgramInfoLog(_shaderProgram, sizeof(errorLog), NULL, errorLog);
-        throw(ShaderException("Invalid shader program: "+std::string(errorLog),
-              _shaderProgram));
+        throw(ShaderException("Invalid shader program: "+std::string(errorLog)));
     }
     _bound = true;
     unbind();
@@ -117,7 +124,7 @@ GLuint Shader::compileShader( std::string code, GLenum type ) {
         std::ostringstream ss;
         ss << "Error compiling shader " << type << ": " << infoLog;
         ss << " in shader " << _shaderProgram;
-        throw(ShaderException(ss.str(), _shaderProgram));
+        throw(ShaderException(ss.str()));
     }
     return shader;
   }

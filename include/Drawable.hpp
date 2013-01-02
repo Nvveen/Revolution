@@ -41,6 +41,8 @@ class Drawable {
                       std::vector<IVec3> const & indData );
     void draw ( Camera * const cam );
     void setHeightDistortion ( float const & height );
+    void setColor ( glm::vec3 const & newColor );
+    void resetColor ();
 
     std::string name;
 
@@ -50,7 +52,7 @@ class Drawable {
     Shader *_shader;
     std::vector<Polygon> _polygons;
     unsigned long _numTriangles;
-    glm::vec4 _primaryColor;
+    glm::vec4 _primaryColor, _savedColor;
 
     glm::mat4 _model;
     float _heightDistortion;
@@ -80,6 +82,17 @@ inline void Drawable::setHeightDistortion ( float const & height )
     _heightDistortion = maxHeightDistortion;
   else if
     (_heightDistortion < 0) _heightDistortion = 0;
+}
+
+inline void Drawable::setColor ( glm::vec3 const & newColor )
+{
+  _savedColor = _primaryColor;
+  _primaryColor = glm::vec4(newColor, 1.0f);
+}
+
+inline void Drawable::resetColor ()
+{
+  _primaryColor = _savedColor;
 }
 
 #endif

@@ -54,19 +54,9 @@ class Shader
 
 class ShaderException : public std::runtime_error {
   public:
-    ShaderException( const std::string & what, GLuint prog ) :
-      std::runtime_error(what), _program(prog) {}
-    const char *what() const throw();
+    ShaderException ( const std::string & what ) : std::runtime_error(what) {}
   private:
-    GLuint _program;
 };
-
-inline const char *ShaderException::what () const throw() {
-  std::ostringstream ss;
-  ss << "Shader exception in " << _program << ": ";
-  ss << std::runtime_error::what();
-  return ss.str().c_str();
-}
 
 inline GLuint Shader::getShaderProgram() {
     return _shaderProgram;

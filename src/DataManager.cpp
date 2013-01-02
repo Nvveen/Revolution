@@ -52,14 +52,19 @@ DataManager * DataManager::readFile ( std::string const & dataset )
       file.seekg(0);
       switch (type[0]) {
         case 'H':
+          std::cout << "Test 1" << std::endl;
           man = new HeightDataManager(file);
+          std::cout << "Test 2" << std::endl;
           man->type = DM_Height;
           break;
         case 'C':
+          std::cout << "Test 3" << std::endl;
           man = new ColorDataManager(file);
+          std::cout << "Test 4" << std::endl;
           man->type = DM_Color;
           break;
         default:
+          std::cout << "Test 5" << std::endl;
           throw (DataManagerException("wrong dataset type defined"));
       }
     }
@@ -99,7 +104,7 @@ void DataManager::init ( std::ifstream & dataset )
             if (d != NULL)
               _dataMembers[d] = std::vector<double>(_dim.size(), 0);
             else
-              throw(false);
+              throw(DataManagerException("could not find country "+token));
           } else {
             buf >> _dataMembers[d][col-1];
           }
@@ -109,9 +114,8 @@ void DataManager::init ( std::ifstream & dataset )
       row++;
     }
   }
-  catch (bool found) {
-    std::cerr << "Country not found, exiting..." << std::endl;
-    throw;
+  catch (DataManagerException & e) {
+    std::cerr << e.what() << std::endl;
   }
 }
 
@@ -177,11 +181,16 @@ void ColorDataManager::activate ( unsigned int const & dimension )
 {
   World & w = World::getSingleton();
   for (Drawable *d : w.getDrawables()) {
+    d->setColor(glm::vec3(0.5f, 0.5f, 0.5f));
   }
 }
 
 void ColorDataManager::deactivate ()
 {
+  World & w = World::getSingleton();
+  for (Drawable *d : w.getDrawables()) {
+    d->resetColor();
+  }
 }
 
 void ColorDataManager::normalize ()
