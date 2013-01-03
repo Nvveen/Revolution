@@ -16,6 +16,7 @@
 #include <sstream>
 #include <glm/gtx/random.hpp>
 #include <boost/filesystem.hpp>
+#include <GL/glew.h>
 #include "World.hpp"
 
 World *World::_worldSingleton = NULL;

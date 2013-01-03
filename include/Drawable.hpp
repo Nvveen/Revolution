@@ -23,7 +23,7 @@
 
 typedef glm::ivec3 IVec3;
 
-struct Polygon;
+class Polygon;
 
 struct Vertex {
   glm::dvec3 position;
@@ -49,7 +49,7 @@ class Drawable {
   protected:
   private:
     Shader *_shader;
-    std::vector<Polygon> _polygons;
+    std::vector<class Polygon> _polygons;
     unsigned long _numTriangles;
     glm::vec4 _primaryColor, _savedColor;
 

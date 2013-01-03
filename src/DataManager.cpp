@@ -176,6 +176,17 @@ void ColorDataManager::activate ( unsigned int const & dimension )
   World & w = World::getSingleton();
   for (Drawable *d : w.getDrawables()) {
     d->setColor(glm::vec3(0.5f, 0.5f, 0.5f));
+    auto it = _dataMembers.find(d);
+    if (it != _dataMembers.end()) {
+      auto indexIt = std::find(_dim.begin(), _dim.end(), dimension);
+      if (indexIt != _dim.end()) {
+        int i = indexIt - _dim.begin();
+        int h = int(it->second[i] * w.getDrawables().size());
+        d->setColor(glm::vec3(float(h)/255.0, 0, 0));
+      } else {
+        throw(DataManagerException("invalid dimensional attribute"));
+      }
+    }
   }
 }
 
@@ -193,8 +204,8 @@ void ColorDataManager::normalize ()
     double max = 0;
     for (auto keyVal : _dataMembers)
       if (max < keyVal.second[i]) max = keyVal.second[i];
-    for (auto & keyVal : _dataMembers) {
-      keyVal.second[i] /= max;
-    }
+    if (max > 0)
+      for (auto & keyVal : _dataMembers)
+        keyVal.second[i] /= max;
   }
 }
