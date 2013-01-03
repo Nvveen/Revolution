@@ -37,8 +37,11 @@ class GUIManager {
     bool handleDSActivation ( CEGUI::EventArgs const & e );
     bool handleDSSelection ( CEGUI::EventArgs const & e );
     bool handleScrollbarChanged ( CEGUI::EventArgs const & e );
+    bool handleBigScrollbarChanged ( CEGUI::EventArgs const & e );
 
     std::string CEGUIInstallBasePath;
+
+    DataManager *_selectedDM;
 };
 
 class GUIManagerException : public std::runtime_error {

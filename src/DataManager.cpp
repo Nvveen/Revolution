@@ -188,6 +188,8 @@ void ColorDataManager::activate ( unsigned int const & dimension )
       }
     }
   }
+  _active = true;
+  _activeDimension = dimension;
 }
 
 void ColorDataManager::deactivate ()
@@ -196,6 +198,7 @@ void ColorDataManager::deactivate ()
   for (Drawable *d : w.getDrawables()) {
     d->resetColor();
   }
+  _active = false;
 }
 
 void ColorDataManager::normalize ()

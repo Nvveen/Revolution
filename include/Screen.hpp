@@ -27,6 +27,7 @@ class Screen {
 
     void render();
     void clear();
+    void close();
     bool isOpened();
   protected:
   private:
@@ -49,8 +50,14 @@ class Screen {
     void executeInput( const SDLKey & key );
 };
 
-inline bool Screen::isOpened() {
+inline bool Screen::isOpened ()
+{
   return _alive;
+}
+
+inline void Screen::close ()
+{
+  _alive = false;
 }
 
 #endif

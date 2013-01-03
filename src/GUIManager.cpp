@@ -170,6 +170,10 @@ void GUIManager::setHandlers ()
   connectFrames(tab);
   tab = wm.getWindow("Sheet/DatasetFrame/TabControl/CTab");
   connectFrames(tab);
+  CEGUI::Scrollbar *sb = static_cast<CEGUI::Scrollbar *>(
+      wm.getWindow("Sheet/DimensionSlider"));
+  sb->subscribeEvent(CEGUI::Scrollbar::EventScrollPositionChanged,
+      CEGUI::Event::Subscriber(&GUIManager::handleBigScrollbarChanged, this));
 }
 
 bool GUIManager::handleOptionsVisibility ( CEGUI::EventArgs const & )
@@ -195,7 +199,18 @@ bool GUIManager::handleDSActivation ( CEGUI::EventArgs const & e )
     CEGUI::Scrollbar *sb = static_cast<CEGUI::Scrollbar *>(tab->getChild(2));
     std::vector<unsigned int> const & dims = dm->getDimensions();
     unsigned int dim = dims[int(sb->getScrollPosition()*(dims.size()-1))];
+    float scrollPos = sb->getScrollPosition();
     dm->activate(dim);
+    // Enable global scrollbar
+    CEGUI::WindowManager & wm = CEGUI::WindowManager::getSingleton();
+    sb = static_cast<CEGUI::Scrollbar *>(wm.getWindow("Sheet/DimensionSlider"));
+    sb->enable();
+    CEGUI::WindowEventArgs w(sb);
+    sb->fireEvent(CEGUI::Scrollbar::EventScrollPositionChanged, w);
+    // Set the global scrollbar to the right position.
+    sb->setScrollPosition(scrollPos);
+    CEGUI::Window *desc = wm.getWindow("Sheet/DimensionText");
+    desc->show();
   }
   // TODO handle else-error
   return true;
@@ -203,22 +218,18 @@ bool GUIManager::handleDSActivation ( CEGUI::EventArgs const & e )
 
 bool GUIManager::handleDSSelection ( CEGUI::EventArgs const & e )
 {
-  static ListboxItem *prevSel = NULL;
-  if (prevSel != NULL) {
-    prevSel->getOwnerWindow()->getChild(2)->disable();
-  }
   CEGUI::Window *tab =
     static_cast<CEGUI::WindowEventArgs const &>(e).window->getParent();
   CEGUI::Listbox *lb = static_cast<CEGUI::Listbox *>(tab->getChild(0));
   CEGUI::Scrollbar *sb = static_cast<CEGUI::Scrollbar *>(tab->getChild(2));
   DataManager *dm = static_cast<DataManager *>(
       lb->getFirstSelectedItem()->getUserData());
+  _selectedDM = dm;
   std::vector<unsigned int> const & dim = dm->getDimensions();
   sb->setStepSize(1.0/float(dim.size()-1));
   sb->enable();
   CEGUI::WindowEventArgs w(sb);
   sb->fireEvent(CEGUI::Scrollbar::EventScrollPositionChanged, w);
-  prevSel = static_cast<ListboxItem *>(lb->getFirstSelectedItem());
   return true;
 }
 
@@ -237,5 +248,45 @@ bool GUIManager::handleScrollbarChanged ( CEGUI::EventArgs const & e )
   unsigned int dim = dims[int(f*(dims.size()-1))];
   std::ostringstream ss; ss << "Dimension: " << dim;
   desc->setText(ss.str());
+  return true;
+}
+
+bool GUIManager::handleBigScrollbarChanged ( CEGUI::EventArgs const & e )
+{
+  CEGUI::WindowManager & wm = CEGUI::WindowManager::getSingleton();
+  try {
+    if (_selectedDM != NULL) {
+      CEGUI::Window *desc = wm.getWindow("Sheet/DimensionText");
+      CEGUI::Scrollbar *sb = static_cast<CEGUI::Scrollbar *>(
+          static_cast<CEGUI::WindowEventArgs const &>(e).window);
+      float f = sb->getScrollPosition();
+      std::vector<unsigned int> const & dims = _selectedDM->getDimensions();
+      unsigned int newDim = dims[int(f*(dims.size()-1))];
+      std::ostringstream ss; ss << newDim;
+      desc->setText(ss.str());
+      CEGUI::Scrollbar *otherSB;
+      switch (_selectedDM->type) {
+        case DM_Height:
+          otherSB = static_cast<CEGUI::Scrollbar *>(wm.getWindow(
+                "Sheet/DatasetFrame/TabControl/HTab/Scrollbar"));
+          break;
+        case DM_Pattern:
+          otherSB = static_cast<CEGUI::Scrollbar *>(wm.getWindow(
+                "Sheet/DatasetFrame/TabControl/PTab/Scrollbar"));
+          break;
+        case DM_Color:
+          otherSB = static_cast<CEGUI::Scrollbar *>(wm.getWindow(
+                "Sheet/DatasetFrame/TabControl/CTab/Scrollbar"));
+          break;
+        default:
+          break;
+      };
+      otherSB->setScrollPosition(f);
+      _selectedDM->activate(newDim);
+    }
+  }
+  catch (DataManagerException & e) {
+    std::cerr << e.what() << std::endl;
+  }
   return true;
 }

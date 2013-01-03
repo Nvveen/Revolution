@@ -38,6 +38,7 @@ class DataManager {
     virtual void deactivate () = 0;
 
     std::vector<unsigned int> const & getDimensions ();
+    unsigned int const & getActiveDimension ();
 
     std::string name;
     DataManagerType type;
@@ -49,6 +50,8 @@ class DataManager {
 
     std::map<Drawable *, std::vector<double>> _dataMembers;
     std::vector<unsigned int> _dim;
+    bool _active;
+    unsigned int _activeDimension;
   private:
 };
 
@@ -87,6 +90,12 @@ class DataManagerException : public std::runtime_error {
 inline std::vector<unsigned int> const & DataManager::getDimensions ()
 {
   return _dim;
+}
+
+inline unsigned int const & DataManager::getActiveDimension ()
+{
+  if (!_active) throw DataManagerException("inactive datamanager");
+  else return _activeDimension;
 }
 
 #endif
