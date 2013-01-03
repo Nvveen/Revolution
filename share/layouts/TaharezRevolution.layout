@@ -43,7 +43,7 @@
           </Window>
         </Window>
         <Window Type="TaharezLook/TabContentPane" Name="Sheet/DatasetFrame/TabControl/PTab">
-          <Property Name="Text" Value="Height datasets" />
+          <Property Name="Text" Value="Pattern datasets" />
           <Window Type="TaharezLook/Listbox" Name="Sheet/DatasetFrame/TabControl/PTab/Listbox">
             <Property Name="UnifiedAreaRect" Value="{{0,10},{0,10},{1,-10},{0.6,-10}}" />
             <Property Name="ID" Value="0" />
@@ -67,7 +67,7 @@
           </Window>
         </Window>
         <Window Type="TaharezLook/TabContentPane" Name="Sheet/DatasetFrame/TabControl/CTab">
-          <Property Name="Text" Value="Height datasets" />
+          <Property Name="Text" Value="Color datasets" />
           <Window Type="TaharezLook/Listbox" Name="Sheet/DatasetFrame/TabControl/CTab/Listbox">
             <Property Name="UnifiedAreaRect" Value="{{0,10},{0,10},{1,-10},{0.6,-10}}" />
             <Property Name="ID" Value="0" />
