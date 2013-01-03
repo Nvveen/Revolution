@@ -15,14 +15,10 @@
 #ifndef  SHADER_HPP
 #define  SHADER_HPP
 
-#include <sstream>
-#include <string>
-#include <iostream>
-#include <vector>
 #include <map>
 #include <glm/glm.hpp>
 #include <stdexcept>
-#include <GL/glew.h>
+#include <GL/gl.h>
 
 class Shader
 {

@@ -12,13 +12,10 @@
 // 
 // You should have received a copy of the GNU General Public License along with 
 // Revolution. If not, see <http://www.gnu.org/licenses/>.
-#include <iostream>
+// #include <iostream>
 #include <boost/tokenizer.hpp>
-#include <vector>
+#include <fstream>
 #include <sstream>
-#include <iterator>
-#include <algorithm>
-#include <map>
 #include "DataManager.hpp"
 #include "World.hpp"
 

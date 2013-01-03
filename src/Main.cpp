@@ -12,7 +12,6 @@
 // 
 // You should have received a copy of the GNU General Public License along with 
 // Revolution. If not, see <http://www.gnu.org/licenses/>.
-#include <iostream>
 #include "Screen.hpp"
 
 const unsigned int width = 1024, height = 768;

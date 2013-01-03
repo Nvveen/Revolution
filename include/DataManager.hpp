@@ -16,8 +16,8 @@
 #define  DATAMANAGER_HPP
 
 #include <string>
-#include <fstream>
-#include <stdexcept>
+#include <vector>
+#include <map>
 #include "Drawable.hpp"
 
 class World;
