@@ -71,6 +71,7 @@ void Screen::createGUI() {
     _world = &World::getSingleton();
     _gui = new GUIManager;
     _gui->populateDatalists(_world->getDatasets());
+    _gui->setClose(this);
   }
   catch (GUIManagerException & e) {
     std::cerr << "Error: " << e.what() << std::endl;

@@ -19,6 +19,8 @@
 #include <vector>
 #include "DataManager.hpp"
 
+class Screen;
+
 class GUIManager {
   public:
     GUIManager ();
@@ -26,6 +28,7 @@ class GUIManager {
 
     void render ();
     void populateDatalists ( std::vector<DataManager *> const & list );
+    void setClose ( Screen *s );
   protected:
   private:
     void init ();

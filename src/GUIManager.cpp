@@ -16,6 +16,7 @@
 #include <GL/glew.h>
 #include <CEGUI/RendererModules/OpenGL/CEGUIOpenGLRenderer.h>
 #include "GUIManager.hpp"
+#include "Screen.hpp"
 
 GUIManager::GUIManager ()
 {
@@ -134,6 +135,15 @@ void GUIManager::populateDatalists ( std::vector<DataManager *> const & list )
   populate("HTab", DM_Height);
   populate("PTab", DM_Pattern);
   populate("CTab", DM_Color);
+}
+
+void GUIManager::setClose ( Screen *s )
+{
+  CEGUI::PushButton *close = static_cast<CEGUI::PushButton *>(
+      CEGUI::WindowManager::getSingleton().getWindow("Sheet/Close"));
+  auto f = [=] (CEGUI::EventArgs const &) -> bool { s->close(); return true; };
+  close->subscribeEvent(CEGUI::PushButton::EventClicked,
+      CEGUI::Event::Subscriber(f));
 }
 
 void GUIManager::setHandlers ()
