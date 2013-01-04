@@ -29,10 +29,8 @@ void loop ( Screen & sc )
   std::cout << " - leaving main loop" << std::endl;
 }
  
-int main (int argc, char *argv[])
+int main (int , char **)
 {
-  // TODO remove this
-  std::cout << argc << argv[0] << std::endl;
 #ifndef NOCEGUI
   std::cout << " - starting CEGUI" << std::endl;
 #endif

@@ -8,6 +8,7 @@ set(INSTALL_DIR "${PROJECT_SOURCE_DIR}/bin")
 set(LIB_DIR "${PROJECT_SOURCE_DIR}/lib")
 set(INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 set(SRC_DIR "${PROJECT_SOURCE_DIR}/src")
+set(CMAKE_VERBOSE_MAKEFILE True)
 set(revolution_SRCS
   ${SRC_DIR}/Camera.cpp
   ${SRC_DIR}/DataManager.cpp
@@ -25,12 +26,19 @@ find_package(Boost COMPONENTS filesystem system REQUIRED)
 find_package(OpenGL)
 find_package(GLEW)
 
+if(WIN32)
+  add_definitions("-DGLEW_STATIC -DCEGUI_STATIC -static")
+endif(WIN32)
+
 include_directories(${INCLUDE_DIR})
 include_directories(${LIB_DIR}/glm)
 include_directories(${Boost_INCLUDE_DIR})
 
-link_libraries(${CEGUI_LIBRARY} ${SDL_LIBRARY} ${Boost_LIBRARIES})
-link_libraries(${OPENGL_LIBRARY} ${GLEW_LIBRARIES})
+link_libraries(${GLEW_LIBRARIES})
+link_libraries(${SDL_LIBRARY})
+link_libraries(${Boost_LIBRARIES})
+link_libraries(${OpenGL_LIBRARY})
+link_libraries(${CEGUI_LIBRARY})
 
 add_executable(main ${revolution_SRCS})
 install(PROGRAMS ${CMAKE_BINARY_DIR}/main DESTINATION ${INSTALL_DIR})
