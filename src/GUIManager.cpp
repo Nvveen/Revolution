@@ -167,6 +167,9 @@ void GUIManager::setHandlers ()
       static_cast<CEGUI::PushButton *>(tab->getChild(3));
     button->subscribeEvent(CEGUI::PushButton::EventClicked,
         CEGUI::Event::Subscriber(&GUIManager::handleDSActivation, this));
+    button = static_cast<CEGUI::PushButton *>(tab->getChild(4));
+    button->subscribeEvent(CEGUI::PushButton::EventClicked,
+        CEGUI::Event::Subscriber(&GUIManager::handleDSDeactivation, this));
     CEGUI::Scrollbar *sb = static_cast<CEGUI::Scrollbar *>(tab->getChild(2));
     sb->subscribeEvent(CEGUI::Scrollbar::EventScrollPositionChanged,
         CEGUI::Event::Subscriber(&GUIManager::handleScrollbarChanged, this));
@@ -221,6 +224,27 @@ bool GUIManager::handleDSActivation ( CEGUI::EventArgs const & e )
     sb->setScrollPosition(scrollPos);
     CEGUI::Window *desc = wm.getWindow("Sheet/DimensionText");
     desc->show();
+  }
+  // TODO handle else-error
+  return true;
+}
+
+bool GUIManager::handleDSDeactivation ( CEGUI::EventArgs const & e )
+{
+  CEGUI::Window *tab =
+    static_cast<CEGUI::WindowEventArgs const &>(e).window->getParent();
+  CEGUI::Listbox *lb = static_cast<CEGUI::Listbox *>(tab->getChild(0));
+  ListboxItem *item = static_cast<ListboxItem *>(lb->getFirstSelectedItem());
+  if (item != NULL) {
+    DataManager *dm = static_cast<DataManager *>(item->getUserData());
+    dm->deactivate();
+    // Enable global scrollbar
+    CEGUI::WindowManager & wm = CEGUI::WindowManager::getSingleton();
+    CEGUI::Scrollbar *sb = static_cast<CEGUI::Scrollbar *>(tab->getChild(2));
+    sb = static_cast<CEGUI::Scrollbar *>(wm.getWindow("Sheet/DimensionSlider"));
+    sb->disable();
+    CEGUI::Window *desc = wm.getWindow("Sheet/DimensionText");
+    desc->hide();
   }
   // TODO handle else-error
   return true;

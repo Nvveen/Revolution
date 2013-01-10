@@ -38,6 +38,7 @@ class GUIManager {
     // Event handles
     bool handleOptionsVisibility ( CEGUI::EventArgs const & );
     bool handleDSActivation ( CEGUI::EventArgs const & e );
+    bool handleDSDeactivation ( CEGUI::EventArgs const & e );
     bool handleDSSelection ( CEGUI::EventArgs const & e );
     bool handleScrollbarChanged ( CEGUI::EventArgs const & e );
     bool handleBigScrollbarChanged ( CEGUI::EventArgs const & e );
