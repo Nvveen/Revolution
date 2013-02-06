@@ -52,7 +52,7 @@ SDL_Surface *Screen::initSDL() {
   }
   SDL_EnableUNICODE(1);
   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
-  SDL_ShowCursor(SDL_DISABLE);
+  SDL_ShowCursor(0);
 
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
@@ -150,8 +150,9 @@ void Screen::injectInput ()
         break;
       case SDL_VIDEORESIZE:
 #ifndef NOCEGUI
-        CEGUI::System::getSingleton().notifyDisplaySizeChanged(CEGUI::Size(
-              e.resize.w, e.resize.h));
+        CEGUI::Renderer *r = CEGUI::System::getSingleton().getRenderer();
+        r->setDisplaySize(CEGUI::Size(e.resize.w, e.resize.h));
+        resize(e.resize.w, e.resize.h);
 #endif
         // TODO camera resize here.
         break;
@@ -260,7 +261,34 @@ void Screen::executeInput( const SDLKey & key ) {
     case SDLK_x:
       _world->getCamera().move(0.0f, -3.0f, 0.0f);
       break;
+    case SDLK_f:
+      toggleFullScreen();
+      std::cout << "Toggling fullscreen..." << std::endl;
+      break;
     default:
       break;
+  }
+}
+
+void Screen::resize( unsigned int const & w, unsigned int const & h ) {
+  _w = w;
+  _h = h;
+  _world->getCamera().resize(_w, _h);
+  SDL_SetVideoMode(_w, _h, 0, SDL_OPENGL | SDL_RESIZABLE);
+  CEGUI::System::getSingleton().getRenderer()->setDisplaySize(CEGUI::Size(_w, _h));
+}
+
+void Screen::toggleFullScreen() {
+  static unsigned int oldW, oldH;
+  static bool fullscreen = false;
+  if (fullscreen) {
+    _w = oldW; _h = oldH;
+    fullscreen = false;
+    resize(oldW, oldH);
+  } else {
+    fullscreen = true;
+    oldW = _w; oldH = _h;
+    SDL_SetVideoMode(0, 0, 0, SDL_OPENGL | SDL_FULLSCREEN);
+    CEGUI::System::getSingleton().getRenderer()->setDisplaySize(CEGUI::Size(_w, _h));
   }
 }

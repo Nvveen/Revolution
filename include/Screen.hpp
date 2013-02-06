@@ -28,6 +28,8 @@ class Screen {
     void render();
     void clear();
     void close();
+    void resize(unsigned int const & w, unsigned int const & h );
+    void toggleFullScreen();
     bool isOpened();
   protected:
   private:

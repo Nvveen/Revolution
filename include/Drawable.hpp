@@ -17,6 +17,7 @@
 
 #include <vector>
 #include <string>
+#include <iostream>
 #include "Shader.hpp"
 #include "Camera.hpp"
 #include <glm/glm.hpp>
@@ -40,6 +41,7 @@ class Drawable {
                       std::vector<IVec3> const & indData );
     void draw ( Camera * const cam );
     void setHeightDistortion ( float const & height );
+    void saveColor ();
     void setColor ( glm::vec3 const & newColor );
     void resetColor ();
 
@@ -83,9 +85,13 @@ inline void Drawable::setHeightDistortion ( float const & height )
     (_heightDistortion < 0) _heightDistortion = 0;
 }
 
-inline void Drawable::setColor ( glm::vec3 const & newColor )
+inline void Drawable::saveColor ()
 {
   _savedColor = _primaryColor;
+}
+
+inline void Drawable::setColor ( glm::vec3 const & newColor )
+{
   _primaryColor = glm::vec4(newColor, 1.0f);
 }
 

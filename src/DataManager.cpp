@@ -175,6 +175,7 @@ void ColorDataManager::activate ( unsigned int const & dimension )
 {
   World & w = World::getSingleton();
   for (Drawable *d : w.getDrawables()) {
+    d->saveColor();
     d->setColor(glm::vec3(0.5f, 0.5f, 0.5f));
     auto it = _dataMembers.find(d);
     if (it != _dataMembers.end()) {

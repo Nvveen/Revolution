@@ -68,7 +68,7 @@ function build() {
   fi
   cmake ${CMAKE_OPTION} ..;
   if $VERBOSE; then
-    make VERBOSE=1 -j4;
+    make -j4;
   else
     make -j4;
   fi
@@ -99,7 +99,6 @@ while getopts ":cdsv" flag; do
       exit 0;
       ;;
     v)
-      VERBOSE=true
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2;

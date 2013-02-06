@@ -31,6 +31,7 @@ class Camera {
     glm::mat4 getProjection (unsigned int const & width,
                              unsigned int const & height);
     glm::mat4 getView();
+    void resize ( unsigned int const & width, unsigned int const & height );
   protected:
   private:
     glm::vec3 _pos, _target, _up;

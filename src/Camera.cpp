@@ -49,3 +49,7 @@ void Camera::look ( float const & refX, float const & refY, float const & i,
   glm::vec3 forward = getDirection();
   _target = _pos + forward;
 }
+
+void Camera::resize( unsigned int const & width, unsigned int const & height ) {
+  _projection = getProjection(width, height);
+}
