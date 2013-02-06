@@ -295,8 +295,6 @@ bool GUIManager::handleBigScrollbarChanged ( CEGUI::EventArgs const & e )
           static_cast<CEGUI::WindowEventArgs const &>(e).window);
       float f = sb->getScrollPosition();
       std::vector<unsigned int> const & dims = _selectedDM->getDimensions();
-      std::cout << "MARKER 1: " << f*(dims.size()-1) << std::endl;
-      std::cout << dims.size() << std::endl;
       unsigned int newDim = dims[int(f*(dims.size()-1))];
       std::ostringstream ss; ss << newDim;
       desc->setText(ss.str());
