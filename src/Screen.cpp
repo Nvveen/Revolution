@@ -14,6 +14,9 @@
 // Revolution. If not, see <http://www.gnu.org/licenses/>.
 #include <GL/glew.h>
 #include "Screen.hpp"
+#ifdef WIN32
+#include "wtypes.h"
+#endif
 
 
 Screen::Screen( const unsigned int & width, const unsigned int & height ) :
@@ -39,12 +42,15 @@ SDL_Surface *Screen::initSDL() {
     exit(0);
   }
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-  SDL_Surface * screen = SDL_SetVideoMode (_w, _h, 0, SDL_OPENGL | SDL_RESIZABLE);
+  SDL_Surface * screen = SDL_SetVideoMode (0, 0, 0, SDL_OPENGL | SDL_RESIZABLE | SDL_FULLSCREEN);
   if (screen == 0) {
     std::cerr << "Unable to set OpenGL videomode: " << SDL_GetError();
     SDL_Quit();
     exit(0);
   }
+  auto info = SDL_GetVideoInfo();
+  _w = info->current_w;
+  _h = info->current_h;
   GLenum res = glewInit();
   if (res != GLEW_OK) {
     std::cerr << "Error: " << glewGetErrorString(res) << std::endl;
@@ -150,8 +156,6 @@ void Screen::injectInput ()
         break;
       case SDL_VIDEORESIZE:
 #ifndef NOCEGUI
-        CEGUI::Renderer *r = CEGUI::System::getSingleton().getRenderer();
-        r->setDisplaySize(CEGUI::Size(e.resize.w, e.resize.h));
         resize(e.resize.w, e.resize.h);
 #endif
         // TODO camera resize here.
@@ -273,22 +277,28 @@ void Screen::executeInput( const SDLKey & key ) {
 void Screen::resize( unsigned int const & w, unsigned int const & h ) {
   _w = w;
   _h = h;
-  _world->getCamera().resize(_w, _h);
   SDL_SetVideoMode(_w, _h, 0, SDL_OPENGL | SDL_RESIZABLE);
   CEGUI::System::getSingleton().getRenderer()->setDisplaySize(CEGUI::Size(_w, _h));
+  _world->getCamera().resize(_w, _h);
 }
 
 void Screen::toggleFullScreen() {
-  static unsigned int oldW, oldH;
-  static bool fullscreen = false;
+  static unsigned int oldW(1024), oldH(768);
+  static bool fullscreen = true;
   if (fullscreen) {
-    _w = oldW; _h = oldH;
     fullscreen = false;
-    resize(oldW, oldH);
+    oldW = _w;
+    oldH = _h;
+    _w = 1024; _h = 768;
+    SDL_SetVideoMode(_w, _h, 0, SDL_OPENGL | SDL_RESIZABLE);
+    CEGUI::System::getSingleton().getRenderer()->setDisplaySize(CEGUI::Size(_w, _h));
+    _world->getCamera().resize(_w, _h);
   } else {
     fullscreen = true;
-    oldW = _w; oldH = _h;
-    SDL_SetVideoMode(0, 0, 0, SDL_OPENGL | SDL_FULLSCREEN);
+    _w = oldW;
+    _h = oldH;
+    SDL_SetVideoMode(_w, _h, 0, SDL_OPENGL | SDL_FULLSCREEN);
     CEGUI::System::getSingleton().getRenderer()->setDisplaySize(CEGUI::Size(_w, _h));
+    World::getSingleton().getCamera().resize(_w, _h);
   }
 }

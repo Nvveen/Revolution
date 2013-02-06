@@ -31,6 +31,8 @@ class Screen {
     void resize(unsigned int const & w, unsigned int const & h );
     void toggleFullScreen();
     bool isOpened();
+
+    static void getResolution ( float & w, float & h );
   protected:
   private:
     unsigned int _w, _h;
